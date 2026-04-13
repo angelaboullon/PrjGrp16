@@ -1,45 +1,46 @@
 ---
-name: Plantilla de Historia de Usuario
-about: Plantilla estándar para las tareas del Sprint
-title: 'HU[XX]: [Título de la funcionalidad]'
-labels: 'enhancement'
-assignees: ''
+name: "🚀 Nueva Historia de Usuario"
+about: "Plantilla guiada para crear tareas del Sprint siguiendo el estándar de la práctica."
+title: "HU[00]: [Escribe aquí un resumen corto]"
+labels: "enhancement"
+assignees: ""
 ---
 
-## 1. Descripción
+> 💡 **Instrucciones:** Sustituye todos los textos que están entre corchetes `[ ]` con la información de la nueva tarea. Cuando termines, borra este bloque amarillo.
 
-**Como** `[rol del usuario]`
-**Quiero** `[acción o funcionalidad]`
-**Para** `[beneficio o valor esperado]`
+## 👤 1. Definición de la Historia
 
----
-
-## 2. Criterios de Aceptación
-
-- [ ] `[Condición 1: ej. El sistema debe...]`
-- [ ] `[Condición 2: ej. Si ocurre X, debe lanzar una excepción...]`
-- [ ] `[Condición 3]`
+| Rol (Quién lo pide) | Acción (Qué necesita) | Beneficio (Para qué lo quiere) |
+| :--- | :--- | :--- |
+| **Como** `[Ej: Administrador]` | **Quiero** `[Ej: registrar una máquina y sus coordenadas]` | **Para** `[Ej: localizarla en el mapa del inventario]` |
 
 ---
 
-## 3. Seguimiento Kanban y Pruebas
-*(Marcar según avanza la tarjeta por el tablero)*
+## ✅ 2. Criterios de Aceptación (Condiciones de Éxito)
+*Añade las condiciones exactas que deben cumplirse para dar esta tarea por válida.*
 
-**Diseño y Codificación**
-- [ ] Diseño de clases y datos documentado en la Memoria (Sección 1).
-- [ ] Diseño de la prueba documentado en la Memoria (Sección 3).
-- [ ] Cambio de rol: la persona que hace las pruebas NO es la misma que programó.
-
-**Caja Negra y Blanca**
-- [ ] **Caja Negra:** Técnica de Equivalencia (CE) en el Anexo 5.1 y programada en JUnit.
-- [ ] **Cobertura:** Eclemma ejecutado y comprobado.
-- [ ] **Caja Blanca:** (Solo si no hay 100% de cobertura) McCabe aplicado en el Anexo 5.2 y pruebas extra codificadas.
+- [ ] **Condición 1:** `[Ej: El sistema permite crear una máquina con un ID único]`
+- [ ] **Condición 2:** `[Ej: Si la máquina no existe al buscarla, lanza una excepción]`
+- [ ] **Condición 3:** `[Añade más si es necesario, o borra esta línea]`
 
 ---
 
-## 4. Check Final (Reglas de la Práctica)
+## 🚦 3. Checklist de Desarrollo y Calidad (IEEE 829)
+*El equipo debe marcar estas casillas a medida que la tarea avanza por las columnas del tablero Kanban.*
 
-- [ ] Todo funciona en memoria con listas/DAOs simulados (sin persistencia real).
-- [ ] No hay prints por consola (`System.out.println`), solo Excepciones.
-- [ ] No hay ningún método `main` en todo el código.
-- [ ] Se ha hecho el commit y push en GitHub.
+### 🛠️ Fase de Desarrollo (Columnas: `Codificación` ➡️ `DiseñoPruebas`)
+- [ ] **1. Diseño de Código:** Diagramas y excepciones documentados en la Memoria (Sección 1).
+- [ ] **2. Diseño de Pruebas:** Objetivo y alcance documentados en la Memoria (Sección 3).
+- [ ] **3. Cambio de Rol:** La persona responsable de programar **ha pasado el relevo** a otro compañero para hacer las pruebas.
+
+### 🧪 Fase de Testing (Columnas: `CajaNegra` ➡️ `CajaBlanca`)
+- [ ] **4. Caja Negra:** Técnica de Equivalencia (CE) documentada en el Anexo 5.1 y programada (JUnit).
+- [ ] **5. Cobertura (Eclemma):** Se ha ejecutado el análisis de cobertura en Eclipse.
+- [ ] **6. Caja Blanca:** *(Solo si la cobertura no es del 100%)* Técnica de McCabe aplicada en Anexo 5.2 y programada.
+
+---
+
+## 🛑 4. Control Final de Reglas de la Práctica
+*Antes de mover la tarjeta a la columna `Entregada`, verifica esto:*
+
+- [ ]
