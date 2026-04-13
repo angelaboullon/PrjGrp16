@@ -6,7 +6,7 @@ labels: "enhancement"
 assignees: ""
 ---
 
-> 💡 **Instrucciones:** Sustituye todos los textos que están entre corchetes `[ ]` con la información de la nueva tarea. Cuando termines, borra este bloque amarillo.
+> 💡 **Instrucciones:** Sustituye todos los textos que están entre corchetes `[ ]` con la información de la nueva tarea. Cuando termines, borra este bloque con la bombilla.
 
 ## 👤 1. Definición de la Historia
 
@@ -29,14 +29,14 @@ assignees: ""
 *El equipo debe marcar estas casillas a medida que la tarea avanza por las columnas del tablero Kanban.*
 
 ### 🛠️ Fase de Desarrollo (Columnas: `Codificación` ➡️ `DiseñoPruebas`)
-- [ ] **1. Diseño de Código:** Diagramas y excepciones documentados en la Memoria (Sección 1).
-- [ ] **2. Diseño de Pruebas:** Objetivo y alcance documentados en la Memoria (Sección 3).
+- [ ] **1. Diseño de Código:** Diagramas y excepciones documentados en la Memoria 
+- [ ] **2. Diseño de Pruebas:** Objetivo y alcance documentados en la Memoria 
 - [ ] **3. Cambio de Rol:** La persona responsable de programar **ha pasado el relevo** a otro compañero para hacer las pruebas.
 
 ### 🧪 Fase de Testing (Columnas: `CajaNegra` ➡️ `CajaBlanca`)
 - [ ] **4. Caja Negra:** Técnica de Equivalencia (CE) documentada en el Anexo 5.1 y programada (JUnit).
 - [ ] **5. Cobertura (Eclemma):** Se ha ejecutado el análisis de cobertura en Eclipse.
-- [ ] **6. Caja Blanca:** *(Solo si la cobertura no es del 100%)* Técnica de McCabe aplicada en Anexo 5.2 y programada.
+- [ ] **6. Caja Blanca:** *(Solo si la cobertura no es del 100%)* Técnica de McCabe aplicada y programada.
 
 ---
 
