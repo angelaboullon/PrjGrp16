@@ -43,7 +43,6 @@ assignees: ""
 ## 🛑 4. Control Final de Reglas de la Práctica
 *Antes de mover la tarjeta a la columna `Entregada`, verifica esto:*
 
-- [ ] 💾 **Sin Persistencia Real:** Todo funciona en memoria con listas/DAOs simulados.
-- [ ] 🔇 **Sin Prints:** No hay ningún `System.out.println` (los errores lanzan Excepciones).
-- [ ] 🚫 **Sin Main:** No existe ningún método `public static void main` en el código.
-- [ ] 🚀 **Commit:** Se ha subido el código final a la rama principal de GitHub.
+- [ ]  **Sin Prints:** No hay ningún `System.out.println` (los errores lanzan Excepciones).
+- [ ]  **Sin Main:** No existe ningún método `public static void main` en el código.
+- [ ]  **Commit:** Se ha subido el código final a la rama principal de GitHub.
