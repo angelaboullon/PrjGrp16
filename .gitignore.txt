@@ -1,0 +1,13 @@
+# Ignorar archivos temporales y compilados
+target/
+*.class
+
+# Ignorar configuración específica de Eclipse
+.settings/
+.project
+.classpath
+
+# Ignorar configuración de otros IDEs
+.idea/
+*.iml
+.vscode/
