@@ -49,4 +49,16 @@ public class VendingService {
         m.setLocalizacion(l);
         maquinaDAO.insertar(m);
     }
+
+    // HU3: Consultar stock de una máquina
+    public List<Stock> consultarStock(MaquinaExpendedora m) throws EntityNotFoundException {
+        if (m == null) {
+            throw new EntityNotFoundException("La máquina es nula.");
+        }
+        MaquinaExpendedora maquina = maquinaDAO.buscarPorId(m.getId());
+        if (maquina == null) {
+            throw new EntityNotFoundException("Máquina no encontrada en el sistema: " + m.getId());
+        }
+        return maquina.getListaStock();
+    }
 }
