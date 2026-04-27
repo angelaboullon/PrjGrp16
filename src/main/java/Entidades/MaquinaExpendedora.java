@@ -1,5 +1,8 @@
 package Entidades;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import Excepciones.*;
 
 
@@ -8,6 +11,7 @@ public class MaquinaExpendedora {
     private String nombre;
     private Localizacion localizacion;
     private Estado estado;
+    private List<Stock> listaStock = new ArrayList<>();
 
     public String getId() { return id; }
     public void setID(String id) throws InvalidIdentifierException {
@@ -31,5 +35,22 @@ public class MaquinaExpendedora {
     }
     
     public void setEstado(Estado estado) { this.estado = estado; }
+    
+    public List<Stock> getListaStock() { return listaStock; }
+    
+
+    // Métodos operativos
+    public void addStock(Stock s) {
+        this.listaStock.add(s);
+    }
+
+    public int calcularEspacioOcupado() {
+        int total = 0;
+        for (Stock s : listaStock) {
+            total += s.getCapacidadMax();
+        }
+        return total;
+    }
+
 }
 
