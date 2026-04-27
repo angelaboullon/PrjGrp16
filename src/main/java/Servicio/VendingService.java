@@ -4,6 +4,7 @@ import Entidades.*;
 import DAO.*;
 import Excepciones.*;
 import java.util.List;
+import java.util.ArrayList;
 
 public class VendingService {
     private MaquinaDAO maquinaDAO;
@@ -48,5 +49,20 @@ public class VendingService {
         // Asignación y guardado
         m.setLocalizacion(l);
         maquinaDAO.insertar(m);
+    }
+
+    // HU5: Identificar productos con bajo stock
+    public List<Stock> consultarProductosBajoStock(MaquinaExpendedora m, int umbral) throws EntityNotFoundException {
+        if (m == null) {
+            throw new EntityNotFoundException("Máquina no encontrada.");
+        }
+        
+        List<Stock> resultado = new ArrayList<>();
+        for (Stock s : m.getListaStock()) {
+            if (s.isBajoMinimos(umbral)) {
+                resultado.add(s);
+            }
+        }
+        return resultado;
     }
 }

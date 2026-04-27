@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import Excepciones.*;
+import java.time.LocalDate;
 
 
 public class MaquinaExpendedora {
@@ -50,6 +51,33 @@ public class MaquinaExpendedora {
             total += s.getCapacidadMax();
         }
         return total;
+    }
+    
+    public LocalDate estimarFechaReposicion(Stock s) {
+        int cantidadActual = s.getCantidadActual();
+        int unidadesVendidas = s.getUnidadesVendidas();
+        LocalDate fechaUltimaReposicion = s.getFechaUltimaReposicion();
+        
+        if (fechaUltimaReposicion == null) {
+            return null;
+        }
+        
+        if (unidadesVendidas == 0) {
+            return null;
+        }
+        
+        long diasDesdePrimeraVenta = java.time.temporal.ChronoUnit.DAYS.between(fechaUltimaReposicion, LocalDate.now());
+        if (diasDesdePrimeraVenta <= 0) {
+            return null;
+        }
+        
+        double velocidadConsumo = (double) unidadesVendidas / diasDesdePrimeraVenta;
+        if (velocidadConsumo == 0) {
+            return null;
+        }
+        
+        long diasHastaAgotamiento = (long) Math.ceil(cantidadActual / velocidadConsumo);
+        return LocalDate.now().plusDays(diasHastaAgotamiento);
     }
 
 }

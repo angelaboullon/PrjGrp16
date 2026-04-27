@@ -9,6 +9,7 @@ public class Stock {
     private int cantidadActual;
     private int capacidadMax;
     private LocalDate fechaUltimaReposicion;
+    private int unidadesVendidas;
 
     // Getters y Setters básicos
     public Producto getProducto() { return producto; }
@@ -19,6 +20,8 @@ public class Stock {
     public void setCapacidadMax(int cm) { this.capacidadMax = cm; }
     public LocalDate getFechaUltimaReposicion() { return fechaUltimaReposicion; }
     public void setFechaUltimaReposicion(LocalDate f) { this.fechaUltimaReposicion = f; }
+    public int getUnidadesVendidas() { return unidadesVendidas; }
+    public void setUnidadesVendidas(int uv) { this.unidadesVendidas = uv; }
 
     // Lógica
     public void incrementar(int n) throws FullCapacityException {
@@ -34,6 +37,11 @@ public class Stock {
             throw new InsufficientStockException("No hay suficiente stock para realizar la venta.");
         }
         this.cantidadActual -= n;
+    }
+
+    public void addVenta(int n) throws InsufficientStockException {
+        decrementar(n);
+        this.unidadesVendidas += n;
     }
 
     public boolean hayStock() {
