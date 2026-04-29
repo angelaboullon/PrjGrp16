@@ -12,6 +12,7 @@ public class MaquinaExpendedora {
     private Localizacion localizacion;
     private Estado estado;
     private List<Stock> listaStock = new ArrayList<>();
+    private int capacidad;
 
     public String getId() { return id; }
     public void setID(String id) throws InvalidIdentifierException {
@@ -38,6 +39,15 @@ public class MaquinaExpendedora {
     
     public List<Stock> getListaStock() { return listaStock; }
     
+    public int getCapacidad() { return capacidad; }
+    public void setCapacidad(int capacidad) throws CapacityOutOfRangeException {
+        if (capacidad <= 0 || capacidad > 1000) {
+            throw new CapacityOutOfRangeException("Capacidad fuera de rango (1-1000).");
+        }
+        this.capacidad = capacidad;
+    }
+
+    
 
     // Métodos operativos
     public void addStock(Stock s) {
@@ -50,6 +60,17 @@ public class MaquinaExpendedora {
             total += s.getCapacidadMax();
         }
         return total;
+    }
+    
+    public Stock buscarStockProducto(Producto p) {
+        for (Stock s : listaStock) {
+            if (s.getProducto().getId().equals(p.getId())) return s;
+        }
+        return null;
+    }
+
+    public boolean estaLlena() {
+        return calcularEspacioOcupado() >= capacidad;
     }
 
 }
