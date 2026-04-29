@@ -29,11 +29,17 @@ public class Stock {
         this.fechaUltimaReposicion = LocalDate.now();
     }
 
-    public void decrementar(int n) throws InsufficientStockException {
-        if (this.cantidadActual - n < 0) {
-            throw new InsufficientStockException("No hay suficiente stock para realizar la venta.");
+    public void decrementar(int cantidad) throws InsufficientStockException {
+        if (cantidad <= 0) {
+            throw new IllegalArgumentException("La cantidad de venta debe ser positiva.");
         }
-        this.cantidadActual -= n;
+
+        if (this.cantidadActual - cantidad < 0) {
+            throw new InsufficientStockException("Stock insuficiente. Solicitado: " 
+                    + cantidad + ", Disponible: " + this.cantidadActual);
+        }
+
+        this.cantidadActual -= cantidad;
     }
 
     public boolean hayStock() {
