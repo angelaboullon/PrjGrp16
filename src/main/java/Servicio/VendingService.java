@@ -92,6 +92,7 @@ public class VendingService {
         
         s.incrementar(cantidad); // Aquí se actualiza la fecha de última reposición dentro del método
     }
+    /*
     
     //HU3: Venta
     public Venta registrarVenta(MaquinaExpendedora m, Producto p, int cant) 
@@ -114,6 +115,6 @@ public class VendingService {
         
         // 5. Persistimos la venta en el historial a través del DAO.
         this.ventaDAO.registrar(nuevaVenta);
-    }
+    }*/
 
 }
