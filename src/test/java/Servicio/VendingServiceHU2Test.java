@@ -80,6 +80,61 @@ class VendingServiceHU2Test {
                 () -> assertThrows(InvalidIdentifierException.class, () -> p.setId("P-1"), "CP-10")
             );
         }
+        
+        
+        @Test
+        @DisplayName("CP-CB-01: Alta de producto exitosa")
+        void testAltaProductoExito() throws Exception {
+            Producto p = new Producto(); p.setId("P-001"); p.setNombre("Refresco");
+            when(productoDAO.buscarPorId("P-001")).thenReturn(null);
+            when(productoDAO.buscarPorNombre("Refresco")).thenReturn(null);
+
+            assertDoesNotThrow(() -> service.darAltaProducto(p));
+            verify(productoDAO, times(1)).insertar(p);
+        }
+
+        @Test
+        @DisplayName("CP-CB-02: Error por ID o Nombre duplicado")
+        void testAltaProductoDuplicado() throws Exception {
+            Producto p = new Producto(); p.setId("P-001"); p.setNombre("Agua");
+            when(productoDAO.buscarPorId("P-001")).thenReturn(p); // Simula ID duplicado
+
+            assertThrows(DuplicateIdentifierException.class, () -> service.darAltaProducto(p));
+        }
+        
+        
+        @Test
+        @DisplayName("CP-CB-05: Verificación de suma de espacio (Caja Blanca - calcularEspacioOcupado)")
+        void testSumaEspacioOcupado() throws Exception {
+            // 1. Preparamos la máquina y los productos de relleno
+            MaquinaExpendedora m = new MaquinaExpendedora();
+            m.setID("M-001"); 
+            m.setCapacidad(100);
+            
+            // Necesitamos que los stocks previos tengan productos para no dar NullPointer
+            Producto pRelleno1 = new Producto(); pRelleno1.setId("P-998");
+            Producto pRelleno2 = new Producto(); pRelleno2.setId("P-999");
+
+            Stock s1 = new Stock(); s1.setCapacidadMax(10); s1.setProducto(pRelleno1);
+            Stock s2 = new Stock(); s2.setCapacidadMax(20); s2.setProducto(pRelleno2);
+            
+            m.addStock(s1);
+            m.addStock(s2);
+
+            Producto pNuevo = new Producto(); pNuevo.setId("P-001");
+
+            // 2. Mocks
+            when(maquinaDAO.buscarPorId("M-001")).thenReturn(m);
+            when(productoDAO.buscarPorId("P-001")).thenReturn(pNuevo);
+
+            // 3. Ejecución: 10 + 20 + 50 = 80 (cabe perfectamente en 100)
+            assertDoesNotThrow(() -> service.asignarProductoMaquina(m, pNuevo, 50));
+            
+            // 4. Verificación
+            assertEquals(3, m.getListaStock().size());
+        }
+        
+        
     }
 
     // --- PRUEBA DE INTEGRACIÓN: PR-INT-02 / PR-INT-05 (Asignación) ---
@@ -135,6 +190,33 @@ class VendingServiceHU2Test {
             when(productoDAO.buscarPorId(any())).thenReturn(p);
 
             assertThrows(ProductAlreadyAssignedException.class, () -> 
+                service.asignarProductoMaquina(m, p, 10));
+        }
+        
+        
+        @Test
+        @DisplayName("CP-CB-03: Error por capacidad excedida (Línea 78)")
+        void testCapacidadExcedida() throws Exception {
+            MaquinaExpendedora m = new MaquinaExpendedora();
+            m.setID("M-001"); m.setCapacidad(10); // Capacidad pequeña
+            Producto p = new Producto(); p.setId("P-001");
+
+            when(maquinaDAO.buscarPorId("M-001")).thenReturn(m);
+            when(productoDAO.buscarPorId("P-001")).thenReturn(p);
+
+            // Intentamos asignar un cupo de 11 en una máquina de 10
+            assertThrows(CapacityExceededException.class, () -> 
+                service.asignarProductoMaquina(m, p, 11));
+        }
+        @Test
+        @DisplayName("CP-CB-04: Máquina existe pero producto no (Cobertura de Rama)")
+        void testProductoInexistente() throws Exception {
+            MaquinaExpendedora m = new MaquinaExpendedora(); m.setID("M-001");
+            when(maquinaDAO.buscarPorId("M-001")).thenReturn(m);
+            when(productoDAO.buscarPorId("P-999")).thenReturn(null);
+
+            Producto p = new Producto(); p.setId("P-999");
+            assertThrows(EntityNotFoundException.class, () -> 
                 service.asignarProductoMaquina(m, p, 10));
         }
     }
