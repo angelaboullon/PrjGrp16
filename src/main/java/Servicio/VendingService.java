@@ -7,6 +7,7 @@ import Excepciones.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 
 public class VendingService 
@@ -111,93 +112,84 @@ public class VendingService
         s.incrementar(cantidad); // Aquí se actualiza la fecha de última reposición dentro del método
     }
         
-    // HU3 - Consultar stock de una máquina:
-    // consultarStock(m): recupera la lista complea de muelles de una máquina.
-
-    // HU4 - Actualizar stock tras venta:
-    // venderProducto(m, p, cantidad): coordina la resta de unidades y la creación del ticket.
-    
-    
-    // HU5 - Detectar productos a reponer:
-    // consultarProductosBajoStock(m, umbral): filtra los productos que necesitan atención
-    // inmediata.
-    
-    
-    // HU6 - Calcular fecha límite de reposición: algoritmo que calcula la velocidad de consumo
-    // (V=unidades/tiempo) y proyecta el agotamiento. Estima cuándo se agotará un producto basándose 
-    // en el historial de ventas y propone una fecha de visita para el operario.
-    public LocalDate estimarFechaReposicion (MaquinaExpendedora m, Producto p)
-    {
-    	// 1. Se busca el objeto Stock asociado al producto 'p' en esa máquina específica 'm'.
-    	Stock s = m.buscarStockProducto(p);
-    	
-    	// 2. Si el producto no está asignado a la máquina (s == null), no se puede calcular 
-    	// nada y se retorna null.
-    	if (s == null) return null;
-    	
-    	// 3. Se convierte la fecha de la última reposición a LocalDateTime (inicio del día) para
-    	// comparar con las ventas. Esto marca el punto de partida del 'ciclo de consumo' actual.
-    	LocalDateTime desde = s.getFechaUltimaReposicion().atStartOfDay();
-    	
-    	// 4. Se consulta al DAO todas las ventas registradas para este producto.
-    	List<Venta> ventasRecientes = ventaDAO.buscarDesdeFecha(m.getId(), p.getId(), desde);
-    	
-    	// 5. Se inicializa un acumulador para sumar el total de unidades vendidas en este periodo.
-    	int totalUnidades = 0;
-    	
-    	// 6. Se recorre la lista de ventas recuperadas y se suman sus unidades al acumulador.
-    	for (Venta v: ventasRecientes) totalUnidades += v.getUnidades();
-    	
-    	// 7. Se calcula la diferencia de días entre la última vez que se rellenó y el día de hoy.
-    	long diasTranscurridos = ChronoUnit.DAYS.between(s.getFechaUltimaReposicion(), LocalDate.now());
-    	
-    	// 8. Si la reposición fue hoy, el resultado sería 0. Se fuerza a 1 para evitar errores matemáticos
-    	// de división por cero.
-    	if (diasTranscurridos == 0) diasTranscurridos = 1; 
-    	
-    	// 9. Se calcula la Velocidad de Consumo: promedio de unidades vendidas por día. Se utiliza (double)
-    	// para no perder los decimales en la división.
-    	double velocidadConsumo = (double) totalUnidades / diasTranscurridos;
-    	
-    	// 10. Si no ha habido ninguna venta (velocidad 0), se lanza una excepción porque no hay datos para
-    	// predecir.
-    	if (velocidadConsumo == 0) throw new ArithmeticException("No hay datos de consumo para este producto.");
-    	
-    	// 11. Se calcula cuántos días tardará en agotarse el stock actual dividiendo lo que queda por la velocidad
-    	// de consumo. El cast a (int) trunca los decimales, dando días completos.
-    	int diasParaAgotar = (int)(s.getCantidadActual() / velocidadConsumo);
-    	
-    	// 12. Se calcula la fecha final: se suman los días de vida que le quedan al stock a la fecha de hoy.
-    	// Se resta 1 día (minusDays(1)) como margen de seguridad para que el operario llegue antes del agotamiento total.
-    	// Se retorna el día de hoy + días para agotar - 1 día de margen.
-    	return LocalDate.now().plusDays(diasParaAgotar).minusDays(1);
+    // HU4 - Actualizar stock tras venta: valida el stock disponible, descuenta las unidades
+    // vendidas y registra la venta en el historial.
+    public Venta venderProducto(MaquinaExpendedora m, Producto p, int cantidad)
+            throws InsufficientStockException, EntityNotFoundException {
+        Stock stock = m.buscarStockProducto(p);
+        if (stock == null) {
+            throw new EntityNotFoundException(
+                    "El producto " + p.getId() + " no está en la máquina " + m.getId());
+        }
+        // Condicón 2 y 3 de HU4: lanza InsufficientStockException si cantidad <= 0 o stock insuficiente.
+        stock.decrementar(cantidad);
+        Venta nuevaVenta = new Venta(m.getId(), p.getId(), cantidad, LocalDateTime.now());
+        ventaDAO.registrar(nuevaVenta);
+        return nuevaVenta;
     }
-    
+
+    // HU5 - Detectar productos a reponer: devuelve los Stock que están bajo el umbral mínimo
+    // o cuya velocidad de consumo indica agotamiento en 3 días o menos.
+    public List<Stock> consultarProductosBajoStock(MaquinaExpendedora m, int umbral) {
+        List<Stock> resultado = new ArrayList<>();
+        for (Stock s : m.getListaStock()) {
+            // Criterio 1: por debajo del umbral estático.
+            if (s.isBajoMinimos(umbral)) {
+                resultado.add(s);
+                continue;
+            }
+            // Criterio 2: velocidad de consumo indica agotamiento en ≤ 3 días.
+            double velocidad = calcularVelocidadConsumo(m, s.getProducto());
+            if (velocidad > 0 && s.getCantidadActual() / velocidad <= 3) {
+                resultado.add(s);
+            }
+        }
+        return resultado;
+    }
+
+    // HU6 - Calcular fecha límite de reposición: estima cuándo se agotará un producto
+    // basándose en el historial de ventas y propone una fecha de visita para el operario.
+    public LocalDate estimarFechaReposicion(MaquinaExpendedora m, Producto p) {
+        Stock s = m.buscarStockProducto(p);
+        if (s == null) return null;
+
+        double velocidadConsumo = calcularVelocidadConsumo(m, p);
+        if (velocidadConsumo == 0)
+            throw new ArithmeticException("No hay datos de consumo para este producto.");
+
+        // Días hasta agotamiento con 1 día de margen de seguridad.
+        int diasParaAgotar = (int) (s.getCantidadActual() / velocidadConsumo);
+        return LocalDate.now().plusDays(diasParaAgotar).minusDays(1);
+    }
+
+    // Utilidad compartida por HU5 y HU6: calcula la velocidad de consumo media (unidades/día)
+    // desde la última reposición hasta hoy.
+    private double calcularVelocidadConsumo(MaquinaExpendedora m, Producto p) {
+        Stock s = m.buscarStockProducto(p);
+        if (s == null || s.getFechaUltimaReposicion() == null) return 0;
+
+        LocalDateTime desde = s.getFechaUltimaReposicion().atStartOfDay();
+        List<Venta> ventasRecientes = ventaDAO.buscarDesdeFecha(m.getId(), p.getId(), desde);
+
+        int totalUnidades = 0;
+        for (Venta v : ventasRecientes) totalUnidades += v.getUnidades();
+
+        long diasTranscurridos = ChronoUnit.DAYS.between(s.getFechaUltimaReposicion(), LocalDate.now());
+        if (diasTranscurridos == 0) diasTranscurridos = 1;
+
+        return (double) totalUnidades / diasTranscurridos;
+    }
+
     /*
-    //HU3: Venta
+    //HU3: Venta (alternativa descartada, integrada en venderProducto de HU4)
     public Venta registrarVenta(MaquinaExpendedora m, Producto p, int cant) 
             throws InsufficientStockException, EntityNotFoundException {
-    	//Buscamos el registro de stock del producto en esa máquina específica.
-        Stock stock = m.buscarStockProducto(p);
-        
-        // 2. Si el producto no existe en la máquina, lanzamos excepción.
+    	Stock stock = m.buscarStockProducto(p);
         if (stock == null) {
             throw new EntityNotFoundException("El producto " + p.getId() + " no existe en la máquina " + m.getId());
         }
-        
-        // 3. Intentamos reducir el stock. El método 'decrementar' validará si hay suficiente.
-        // Si la cantidad solicitada supera el stock, 'decrementar' lanzará InsufficientStockException.
         stock.decrementar(cant);
-        
-        // 4. Creamos el objeto Venta usando tu nuevo constructor basado en IDs.
-        // Usamos LocalDateTime.now() para registrar el momento exacto.
         Venta nuevaVenta = new Venta(m.getId(), p.getId(), cant, LocalDateTime.now());
-        
-        // 5. Persistimos la venta en el historial a través del DAO.
         this.ventaDAO.registrar(nuevaVenta);
     }*/
-    
-    // HU4: Estimación de fechas.
-    
-    // HU5:  
 }

@@ -22,7 +22,7 @@ class HU3StockTest {
     void setUp() throws Exception {
         maquinaDAO = new MaquinaDAO();
         localizacionDAO = new LocalizacionDAO();
-        servicio = new VendingService(maquinaDAO, localizacionDAO);
+        servicio = new VendingService(maquinaDAO, localizacionDAO, new ProductoDAO(), new VentaDAO());
 
         // Crear una máquina de prueba
         maquina = new MaquinaExpendedora();
