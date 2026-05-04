@@ -10,6 +10,7 @@ public class Stock
     private int cantidadActual;
     private int capacidadMax;
     private LocalDate fechaUltimaReposicion;
+    private int unidadesVendidas;
 
     // Getters y Setters básicos
     public Producto getProducto() { return producto; }
@@ -26,6 +27,8 @@ public class Stock
     // de la velocidad.
     public LocalDate getFechaUltimaReposicion() { return fechaUltimaReposicion; }
     public void setFechaUltimaReposicion(LocalDate f) { this.fechaUltimaReposicion = f; }
+    public int getUnidadesVendidas() { return unidadesVendidas; }
+    public void setUnidadesVendidas(int uv) { this.unidadesVendidas = uv; }
 
     // Lógica
     public void incrementar(int n) throws FullCapacityException 
@@ -49,6 +52,11 @@ public class Stock
                     + cantidad + ", Disponible: " + this.cantidadActual);
         }
         this.cantidadActual -= cantidad;
+    }
+
+    public void addVenta(int n) throws InsufficientStockException {
+        decrementar(n);
+        this.unidadesVendidas += n;
     }
 
     // HU5 - Detectar productos a reponer: comprobación binaria de disponibilidad.
