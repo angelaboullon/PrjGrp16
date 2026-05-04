@@ -109,7 +109,6 @@ class VendingServiceHU1Test {
             l2.setLatitud(40.0); // Misma latitud
             l2.setLongitud(-3.0); // Misma longitud
 
-            // 3. ENTRENAMOS AL MOCK (Aquí va tu código)
             // Cuando el servicio llame a 'listarTodas()', le pasamos la lista con la máquina que molesta
             List<MaquinaExpendedora> listaFalsa = new ArrayList<>();
             listaFalsa.add(m1);
@@ -135,13 +134,13 @@ class VendingServiceHU1Test {
             l1.setLatitud(10.0);
             l1.setLongitud(20.0);
 
-            // 1. MAGIA DEL MOCK: Le decimos que esta coordenada YA EXISTE en la BD
+            // Le decimos que esta coordenada YA EXISTE en la BD
             when(localizacionDAO.buscarPorCoordenadas(10.0, 20.0)).thenReturn(new Localizacion());
             
             // Que los demás DAOs den vía libre para que el test termine bien
             when(maquinaDAO.buscarPorId("M-005")).thenReturn(null);
             
-            // 2. Ejecutamos. El servicio debe lanzar la excepción internamente, 
+            // Ejecutamos. El servicio debe lanzar la excepción internamente, 
             // capturarla en el catch (poniéndolo verde) y continuar hasta guardar la máquina.
             assertDoesNotThrow(() -> servicio.darAltaMaquina(m1, l1));
             
@@ -159,14 +158,14 @@ class VendingServiceHU1Test {
             lNueva.setLatitud(10.0);
             lNueva.setLongitud(20.0);
 
-            // 2. Una máquina "vecina" que está en OTRA ubicación
+            // Una máquina "vecina" que está en OTRA ubicación
             MaquinaExpendedora mVecina = new MaquinaExpendedora();
             Localizacion lVecina = new Localizacion();
             lVecina.setLatitud(80.0); // Coordenada diferente
             lVecina.setLongitud(80.0); // Coordenada diferente
             mVecina.setLocalizacion(lVecina);
 
-            // 3. MAGIA DEL MOCK: Simulamos que al listar, la base de datos devuelve a la vecina
+            // Simulamos que al listar, la base de datos devuelve a la vecina
             List<MaquinaExpendedora> listaFalsa = new ArrayList<>();
             listaFalsa.add(mVecina);
             when(maquinaDAO.listarTodas()).thenReturn(listaFalsa);
@@ -175,7 +174,7 @@ class VendingServiceHU1Test {
             when(localizacionDAO.buscarPorCoordenadas(10.0, 20.0)).thenReturn(null);
             when(maquinaDAO.buscarPorId("M-006")).thenReturn(null);
 
-            // 4. Ejecutamos. El bucle dará una vuelta, el 'if' dirá "no chocan" (False -> Verde) 
+            // Ejecutamos. El bucle dará una vuelta, el 'if' dirá "no chocan" (False -> Verde) 
             // y la máquina nueva se guardará con éxito.
             assertDoesNotThrow(() -> servicio.darAltaMaquina(mNueva, lNueva));
         }
