@@ -4,7 +4,7 @@
 <artifactId>MvPrjGrpXY</artifactId>
 <version>0.0.1-SNAPSHOT</version>
 <properties>
-<!--  Fuerza el uso de java 21  -->
+<!--  Fuerza el uso de java 17  -->
 <maven.compiler.source>17</maven.compiler.source>
 <maven.compiler.target>17</maven.compiler.target>
 <maven.compiler.release>17</maven.compiler.release>

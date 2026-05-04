@@ -121,7 +121,7 @@ public class VendingService
             throw new EntityNotFoundException(
                     "El producto " + p.getId() + " no está en la máquina " + m.getId());
         }
-        // Condicón 2 y 3 de HU4: lanza InsufficientStockException si cantidad <= 0 o stock insuficiente.
+        // Condición 2 y 3 de HU4: lanza InsufficientStockException si cantidad <= 0 o stock insuficiente.
         stock.decrementar(cantidad);
         Venta nuevaVenta = new Venta(m.getId(), p.getId(), cantidad, LocalDateTime.now());
         ventaDAO.registrar(nuevaVenta);
@@ -182,14 +182,5 @@ public class VendingService
 
     /*
     //HU3: Venta (alternativa descartada, integrada en venderProducto de HU4)
-    public Venta registrarVenta(MaquinaExpendedora m, Producto p, int cant) 
-            throws InsufficientStockException, EntityNotFoundException {
-    	Stock stock = m.buscarStockProducto(p);
-        if (stock == null) {
-            throw new EntityNotFoundException("El producto " + p.getId() + " no existe en la máquina " + m.getId());
-        }
-        stock.decrementar(cant);
-        Venta nuevaVenta = new Venta(m.getId(), p.getId(), cant, LocalDateTime.now());
-        this.ventaDAO.registrar(nuevaVenta);
-    }*/
+    */
 }
