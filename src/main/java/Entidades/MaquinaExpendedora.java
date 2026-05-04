@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import Excepciones.*;
-import java.time.LocalDate;
 
 
 public class MaquinaExpendedora 
@@ -38,9 +37,9 @@ public class MaquinaExpendedora
     public String getModeo() { return modelo; }
     public void setModelo(String modelo) throws InvalidModelFormatException
     {
-    if (modelo == null || !modelo.startsWith("VMM-"))
-    throw new InvalidModelFormatException("El modelo debe empezar por VMM-.");
-    this.modelo = modelo;
+    	if (modelo == null || !modelo.startsWith("VMM-"))
+    		throw new InvalidModelFormatException("El modelo debe empezar por VMM-.");
+    	this.modelo = modelo;
     }
     
     public int getCapacidad() { return capacidad; }
@@ -54,14 +53,14 @@ public class MaquinaExpendedora
     public Estado getEstado() { return estado; }
     public void setEstado(Estado estado) 
     { 
-    if (estado == null) throw new IllegalArgumentException("El estado no puede ser nulo.");
-    this.estado = estado; 
+    	if (estado == null) throw new IllegalArgumentException("El estado no puede ser nulo.");
+    	this.estado = estado; 
     }
     
     public Localizacion getLocalizacion() { return localizacion; }
     public void setLocalizacion(Localizacion localizacion) 
     {
-    if (localizacion == null) throw new IllegalArgumentException("La localización no puede ser nula.");
+    	if (localizacion == null) throw new IllegalArgumentException("La localización no puede ser nula.");
         this.localizacion = localizacion;
     }
     
@@ -84,33 +83,6 @@ public class MaquinaExpendedora
         return total;
     }
     
-    public LocalDate estimarFechaReposicion(Stock s) {
-        int cantidadActual = s.getCantidadActual();
-        int unidadesVendidas = s.getUnidadesVendidas();
-        LocalDate fechaUltimaReposicion = s.getFechaUltimaReposicion();
-        
-        if (fechaUltimaReposicion == null) {
-            return null;
-        }
-        
-        if (unidadesVendidas == 0) {
-            return null;
-        }
-        
-        long diasDesdePrimeraVenta = java.time.temporal.ChronoUnit.DAYS.between(fechaUltimaReposicion, LocalDate.now());
-        if (diasDesdePrimeraVenta <= 0) {
-            return null;
-        }
-        
-        double velocidadConsumo = (double) unidadesVendidas / diasDesdePrimeraVenta;
-        if (velocidadConsumo == 0) {
-            return null;
-        }
-        
-        long diasHastaAgotamiento = (long) Math.ceil(cantidadActual / velocidadConsumo);
-        return LocalDate.now().plusDays(diasHastaAgotamiento);
-    }
-
     public Stock buscarStockProducto(Producto p) 
     {
         for (Stock s : listaStock) 
@@ -123,3 +95,4 @@ public class MaquinaExpendedora
     public boolean estaLlena() { return calcularEspacioOcupado() >= capacidad; }
 
 }
+
