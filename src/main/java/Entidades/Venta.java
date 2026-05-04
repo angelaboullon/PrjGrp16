@@ -2,13 +2,15 @@ package Entidades;
 
 import java.time.LocalDateTime;
 
-public class Venta {
+public class Venta 
+{
     private String idMaquina;
     private String idProducto;
     private int unidades;
     private LocalDateTime fechaVenta;
 
-    public Venta(String idMaquina, String idProducto, int unidades, LocalDateTime fechaVenta) {
+    public Venta(String idMaquina, String idProducto, int unidades, LocalDateTime fechaVenta) 
+    {
         this.idMaquina = idMaquina;
         this.idProducto = idProducto;
         this.unidades = unidades;
