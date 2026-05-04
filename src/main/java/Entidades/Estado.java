@@ -1,5 +1,3 @@
 package Entidades;
 
-public enum Estado {
-    OPERATIVA, AVERIADA
-}
+public enum Estado { OPERATIVA, AVERIADA }
