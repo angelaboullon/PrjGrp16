@@ -178,6 +178,4 @@ public class VendingService {
     // HU4: Estimación de fechas.
     
     // HU5:  
-
->>>>>>> parent of a18cf31 (Finalizada codificación de HU3)
 }
