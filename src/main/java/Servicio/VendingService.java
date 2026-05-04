@@ -60,7 +60,19 @@ public class VendingService
         m.setLocalizacion(l);
         maquinaDAO.insertar(m);
     }
-    
+
+    // HU3 - Consultar stock de una máquina
+    public List<Stock> consultarStock(MaquinaExpendedora m) throws EntityNotFoundException {
+        if (m == null) {
+            throw new EntityNotFoundException("La máquina es nula.");
+        }
+        MaquinaExpendedora maquina = maquinaDAO.buscarPorId(m.getId());
+        if (maquina == null) {
+            throw new EntityNotFoundException("Máquina no encontrada en el sistema: " + m.getId());
+        }
+        return maquina.getListaStock();
+    }
+
     // Gestión de Catálogo
     public void darAltaProducto(Producto p) throws Exception {
         if (productoDAO.buscarPorId(p.getId()) != null) throw new DuplicateIdentifierException("ID de producto repetido.");
@@ -98,11 +110,10 @@ public class VendingService
         
         s.incrementar(cantidad); // Aquí se actualiza la fecha de última reposición dentro del método
     }
-    
+        
     // HU3 - Consultar stock de una máquina:
     // consultarStock(m): recupera la lista complea de muelles de una máquina.
-    
-    
+
     // HU4 - Actualizar stock tras venta:
     // venderProducto(m, p, cantidad): coordina la resta de unidades y la creación del ticket.
     
@@ -189,5 +200,4 @@ public class VendingService
     // HU4: Estimación de fechas.
     
     // HU5:  
-
 }
