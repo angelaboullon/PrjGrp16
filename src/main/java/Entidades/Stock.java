@@ -1,48 +1,64 @@
 package Entidades;
 
-import Excepciones.FullCapacityException;
 import Excepciones.InsufficientStockException;
+import Excepciones.FullCapacityException;
 import java.time.LocalDate;
 
 public class Stock 
 {
-    private Producto producto;
+	// ========================
+	// ATRIBUTOS DE LA CLASE
+	// ========================
+	private Producto producto;
     private int cantidadActual;
     private int capacidadMax;
     private LocalDate fechaUltimaReposicion;
 
-    // Getters y Setters básicos
+    
+    
+    // ===================
+    // GETTERS Y SETTERS
+    // ===================
+    
     public Producto getProducto() { return producto; }
     public void setProducto(Producto p) { this.producto = p; }
-    // HU3 - Consultar stock de una máquina: devuelve las unidades disponibles
-    // en ese instante.
+    
     public int getCantidadActual() { return cantidadActual; }
     public void setCantidadActual(int c) { this.cantidadActual = c; }
+    
     public int getCapacidadMax() { return capacidadMax; }
-    // HU2 - Asociar productos a máquina: define el límite físico del muelle
-    // para ese producto.
     public void setCapacidadMax(int cm) { this.capacidadMax = cm; }
-    // HU6 - Calcular fecha límite de reposición: punto de partida temporal para el cálculo
-    // de la velocidad.
+    
     public LocalDate getFechaUltimaReposicion() { return fechaUltimaReposicion; }
     public void setFechaUltimaReposicion(LocalDate f) { this.fechaUltimaReposicion = f; }
 
-    // Lógica
+    
+    
+    // ==========
+    // MÉTODOS
+    // ==========
+    
+    /** incrementar(): incrementa las existencias del producto (proceso de reposición). **/
     public void incrementar(int n) throws FullCapacityException 
     {
-        if (this.cantidadActual + n > this.capacidadMax)
+        // Validación de desbordamiento de capacidad.
+    	if (this.cantidadActual + n > this.capacidadMax)
             throw new FullCapacityException("No cabe tanta cantidad en este muelle.");
-        this.cantidadActual += n;
+        
+    	this.cantidadActual += n;
+    	
+    	// Registro de la estampa de tiempo.
         this.fechaUltimaReposicion = LocalDate.now();
     }
     
-    // HU4 - Actualizar stock tras venta: resta las unidades validando que no se quede en 
-    // negativo.
+    /** decrementar(): reduce las unidades disponibles tras una compra exitosa. **/
     public void decrementar(int cantidad) throws InsufficientStockException 
     {
-        if (cantidad <= 0)
+        // Validación de integridad: no se pueden procesar ventas no positivas.
+    	if (cantidad <= 0)
             throw new IllegalArgumentException("La cantidad de venta debe ser positiva.");
 
+    	// Verificación de disponibilidad para evitar stock negativo.
         if (this.cantidadActual - cantidad < 0) 
         {
             throw new InsufficientStockException("Stock insuficiente. Solicitado: " 
@@ -51,11 +67,12 @@ public class Stock
         this.cantidadActual -= cantidad;
     }
 
-    // HU5 - Detectar productos a reponer: comprobación binaria de disponibilidad.
+    /** hayStock(): determina de forma rápida si el muelle contiene al menos una unidad de venta. **/
     public boolean hayStock() { return cantidadActual > 0; }
 
+    /** calcularPorcentajeOcupacion(): calcula el nivel de llenado del muelle en términos porcentuales. **/
     public double calcularPorcentajeOcupacion() { return (double) (cantidadActual * 100) / capacidadMax; }
 
-    // HU5 - Detectar productos a reponer: compara la cantidad actual con el límite de alerta definido.
+    /** isBajoMinimos(): compara las existencias actuales con un límite de seguridad definido externamente. **/
     public boolean isBajoMinimos(int umbral) { return cantidadActual < umbral; }
 }

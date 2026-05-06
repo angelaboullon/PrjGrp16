@@ -1,22 +1,51 @@
 package Servicio;
 
+import Excepciones.*;
 import Entidades.*;
 import DAO.*;
-import Excepciones.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * VendingService.java: CAPA DE SERVICIO
+ * 
+ * Esta clase actúa como el 'Cerebro Logístico' del sistema. Su responsabilidad principal es la implementación
+ * de las reglas de negocio.
+ * Sigue el principio de inyección de dependencias al recibir los DAOs por constructor, lo que desacopla la
+ * lógica de la persistencia de datos.
+ **/
 public class VendingService 
 {
-    private MaquinaDAO maquinaDAO;
-    private LocalizacionDAO localizacionDAO;
-    private ProductoDAO productoDAO;
+	// ========================
+	// ATRIBUTOS DE LA CLASE
+	// ========================
+	
+	// Objeto de Acceso a Datos para la gestión de puntos geográficos. 
+	private LocalizacionDAO localizacionDAO;
+	
+	// Objeto de Acceso a Datos para el catálogo de productos. 
+	private ProductoDAO productoDAO;
+	
+	// Objeto de Acceso a Datos para el inventario de máquinas expendedoras.
+	private MaquinaDAO maquinaDAO;
+	
+	// Objeto de Acceso a Datos para el registro histórico de transacciones.
     private VentaDAO ventaDAO;
 
-    // Constructor: Solo necesitamos los DAOs de máquinas y localizaciones para HU1
+
+    
+    // ================
+    // CONSTRUCTORES
+    // ================
+    
+    // Constructor sin argumentos.
+    public VendingService() {}
+
+    // Constructor principal: vincula el servicio con sus respectivos repositorios de datos.
     public VendingService(MaquinaDAO mDao, LocalizacionDAO lDao, ProductoDAO pDao, VentaDAO vDao) 
     {
         this.maquinaDAO = mDao;
@@ -25,169 +54,234 @@ public class VendingService
         this.ventaDAO = vDao;
     }
 
-    // HU1 - Cargar máquinas en el sistema: valida que las coordenadas no existan previamente.
-    public void registrarLocalizacion(Localizacion l) throws DuplicateLocationException {
-        if (localizacionDAO.buscarPorCoordenadas(l.getLatitud(), l.getLongitud()) != null) {
+    
+    
+    // =======================================
+    // HU1 - CARGAR MÁQUINAS EN EL SISTEMA
+    // =======================================
+    
+    /**
+     * registrarLocalizacion().
+     * 
+     * Este método se encarga de registrar un punto geográfico único en el sistema.
+     * Antes de insertar, verifica mediante las coordenadas GPS (latitud/longitud) que no exista 
+     * ya un registro idéntico para evitar redundancia de datos.
+     **/
+    public void registrarLocalizacion(Localizacion l) throws DuplicateLocationException 
+    {
+        if (localizacionDAO.buscarPorCoordenadas(l.getLatitud(), l.getLongitud()) != null) 
+        {
             throw new DuplicateLocationException("Ya existe una localización en estas coordenadas.");
         }
         localizacionDAO.insertar(l);
     }
 
-    // HU1 - Cargar máquinas en el sistema: orquestador principal que valida duplicados y vincula la
-    // máquina a una ubicación.
-    public void darAltaMaquina(MaquinaExpendedora m, Localizacion l) throws Exception {
-        // 1. Intentar registrar localización (si no existe ya)
-        try {
+    /**
+     * darAltaMaquina()
+     * 
+     * Este método se encarga de llevar a cabo el proceso integral de alta de una máquina expendedora.
+     * 1. Asegura que la localización esté registrada en el sistema.
+     * 2. Verifica que la localización física esté vacía; es decir, sin otra máquina instalada.
+     * 3. Valida la unicidad del identificador (M-XXX) y del nombre comercial.
+     **/
+    public void darAltaMaquina(MaquinaExpendedora m, Localizacion l) throws Exception 
+    {
+        try 
+        {
+        	// Se intenta el registro por si el parámetro l es una ubicación nueva.
             registrarLocalizacion(l);
-        } catch (DuplicateLocationException e) {
-            // Si ya existe, se permite continuar para asociar la máquina a ella
+        } catch (DuplicateLocationException e) 
+        {
+            // Si la localización l ya existía, el catch captura la excepción y permite continuar:
+        	// la ubicación es válida para ser vinculada a la máquina.
         }
-
-        // 2. Regla de negocio: Comprobar si la localización ya tiene una máquina asignada
-        for (MaquinaExpendedora maq : maquinaDAO.listarTodas()) {
+        
+        // Validación de exclusividad: una localización física solamente puede albergar una máquina
+        // a la vez.
+        for (MaquinaExpendedora maq : maquinaDAO.listarTodas()) 
+        {
             if (maq.getLocalizacion().getLatitud() == l.getLatitud() && 
-                maq.getLocalizacion().getLongitud() == l.getLongitud()) {
+                maq.getLocalizacion().getLongitud() == l.getLongitud()) 
+            {
                 throw new LocationOccupiedException("Esta localización ya tiene una máquina asignada.");
             }
         }
 
-        // 3. Validar que el ID y el Nombre de la máquina sean únicos en el sistema
-        if (maquinaDAO.buscarPorId(m.getId()) != null) {
+        // Validación de identificadores únicos.
+        if (maquinaDAO.buscarPorId(m.getId()) != null) 
+        {
             throw new DuplicateIdentifierException("ID de máquina repetido.");
         }
         
-        // Asignación y guardado
+        // Vinculación final de la entidad Máquina con su Localización.
         m.setLocalizacion(l);
         maquinaDAO.insertar(m);
     }
     
-    // Gestión de Catálogo
-    public void darAltaProducto(Producto p) throws Exception {
+    
+    // ========================================
+    // HU2 - ASOCIAR PRODUCTOS A UNA MÁQUINA
+    // ========================================
+    public void darAltaProducto(Producto p) throws Exception 
+    {
         if (productoDAO.buscarPorId(p.getId()) != null) throw new DuplicateIdentifierException("ID de producto repetido.");
         if (productoDAO.buscarPorNombre(p.getNombre()) != null) throw new DuplicateNameException("Nombre de producto repetido.");
         productoDAO.insertar(p);
     }
 
-    // HU2 - Asociar productos a máquina: crea la relación entre un producto y una máquina, validando
-    // que la máquina no supere su capacidadTotal.
-    public void asignarProductoMaquina(MaquinaExpendedora m, Producto p, int cupoMax) throws Exception {
-        // Validar existencia
-        if (maquinaDAO.buscarPorId(m.getId()) == null || productoDAO.buscarPorId(p.getId()) == null) {
+    /**
+     * asignarProductoMaquina()
+     * 
+     * Este método asigna un producto del catálogo a una máquina específica creando un 'muelle' (Stock).
+     * En él se controla la capacidad física: la suma de los límites de cada producto (cupoMax) no puede exceder la capacidad
+     * total de carga de la máquina expendedora.
+     **/
+    public void asignarProductoMaquina(MaquinaExpendedora m, Producto p, int cupoMax) throws Exception 
+    {
+        // Verificación de integridad: ambos elementos deben existir previamente en el sistema.
+        if (maquinaDAO.buscarPorId(m.getId()) == null || productoDAO.buscarPorId(p.getId()) == null) 
+        {
             throw new EntityNotFoundException("La máquina o el producto no existen.");
         }
-        // Validar si ya está asignado
-        if (m.buscarStockProducto(p) != null) {
+
+        // Se evita duplicar el mismo producto en distintos muelles de la misma máquina.
+        if (m.buscarStockProducto(p) != null) 
+        {
             throw new ProductAlreadyAssignedException("El producto ya está en esta máquina.");
         }
-        // Validar espacio físico total de la máquina
-        if (m.calcularEspacioOcupado() + cupoMax > m.getCapacidad()) {
+       
+        // Regla de volumen: se controla que no se reserve más espacio del que la máquina permite físicamente.
+        if (m.calcularEspacioOcupado() + cupoMax > m.getCapacidad()) 
+        {
             throw new CapacityExceededException("No hay espacio suficiente en la máquina para ese cupo.");
         }
 
+        // Creación del objeto Stock (vínculo Producto <-> Máquina con sus propios atributos de cantidad).
         Stock nuevoStock = new Stock();
         nuevoStock.setProducto(p);
         nuevoStock.setCapacidadMax(cupoMax);
-        nuevoStock.setCantidadActual(0);
+        nuevoStock.setCantidadActual(0);	// El muelle nace configurado pero vacío.
         m.addStock(nuevoStock);
     }
 
-    // HU2: Reposición
-    public void reponerStock(MaquinaExpendedora m, Producto p, int cantidad) throws Exception {
+    
+    /**
+     * reponerStock()
+     * 
+     * Este método se encarga del proceso de reposición de mercancía.
+     * Actualiza las unidades y registra la fecha de la operación para el cálculo de velocidad.
+     **/
+    public void reponerStock(MaquinaExpendedora m, Producto p, int cantidad) throws Exception 
+    {
         Stock s = m.buscarStockProducto(p);
         if (s == null) throw new EntityNotFoundException("El producto no está asignado a esta máquina.");
         
-        s.incrementar(cantidad); // Aquí se actualiza la fecha de última reposición dentro del método
+        // El método incrementar() de la entidad Stock gestiona la fechaUltimaReposicion automáticamente.
+        s.incrementar(cantidad); 
     }
+
     
-    // HU3 - Consultar stock de una máquina:
-    // consultarStock(m): recupera la lista complea de muelles de una máquina.
+    // ========================================
+    // HU3 - CONSULTAR STOCK DE UNA MÁQUINA
+    // ========================================
     
+    /**
+     * consultarStock()
+     * 
+     * 
+     **/
+    // INSERTAR EL MÉTODO AQUÍ
+
     
-    // HU4 - Actualizar stock tras venta:
-    // venderProducto(m, p, cantidad): coordina la resta de unidades y la creación del ticket.
+    // ========================================
+    // HU4 - ACTUALIZAR STOCK TRAS VENTA
+    // ========================================
     
+    /**
+     * venderProducto()
+     * 
+     * Este método se encarga de ejecutar una venta, reduciendo el stock disponible y generando un 
+     * registro histórico. 
+     * Resulta una función fundamental para que el algoritmo de HU6 funcione.
+     **/
+    // INSERTAR EL MÉTODO AQUÍ
+
+
     
-    // HU5 - Detectar productos a reponer:
-    // consultarProductosBajoStock(m, umbral): filtra los productos que necesitan atención
-    // inmediata.
+    // ========================================
+    // HU5 - DETECTAR PRODUCTOS A REPONER
+    // ========================================
     
+    /**
+     * consultarProductosBajoStock()
+     * 
+     * Este método identifica y filtra los productos de una máquina que requieren atención inmediata.
+     * Actúa como un monitor de alertas preventivas. Su objetivo es generar una 'lista crítica' de
+     * aquellos muelles de carga cuya cantidad actual ha caído por debajo de un límite de seguridad 
+     * (umbral), permitiendo al gestor priorizar las rutas de reposición antes de que se produzca 
+     * una rotura de stock.
+     **/
+    public List<Stock> consultarProductosBajoStock(MaquinaExpendedora m, int umbral)
+    {
+    	List<Stock> critica = new ArrayList<>();
+    	
+    	// Se recorre la lista completa de existencias (muelles) de la máquina proporcionada.
+    	for (Stock s : m.getListaStock())
+    	{
+    		// Se invoca la lógica interna de la entidad Stock para evaluar si la cantidad actual es
+    		// inferior al umbral de alerta definido. 
+    		// Si el producto está 'bajo mínimos', se añade a la lista de resultados.
+    		if (s.isBajoMinimos(umbral)) critica.add(s);
+    	}
+    	return critica;
+    }
+
+
     
-    // HU6 - Calcular fecha límite de reposición: algoritmo que calcula la velocidad de consumo
-    // (V=unidades/tiempo) y proyecta el agotamiento. Estima cuándo se agotará un producto basándose 
-    // en el historial de ventas y propone una fecha de visita para el operario.
+    // ===========================================
+    // HU6 - CALCULAR FECHA LÍMITE DE REPOSICIÓN
+    // ===========================================
+    
+    /**
+     * estimarFechaReposicion()
+     * 
+     * Este método se encarga de calcular la fecha estimada de agotamiento de un producto.
+     * 
+     * Lógica del algoritmo:
+     * 1. Obtiene las ventas realizadas desde la última vez que el operario llenó la máquina.
+     * 2. Calcula la velocidad de consumo, V = unidadesVendidas/diasTranscurridos
+     * 3. Proyecta cuánto tiempo durará el stock actual basándose en esa velocidad.
+     * 4. Propone la visita del operario un día antes (margen de seguridad).
+     **/
     public LocalDate estimarFechaReposicion (MaquinaExpendedora m, Producto p)
     {
-    	// 1. Se busca el objeto Stock asociado al producto 'p' en esa máquina específica 'm'.
     	Stock s = m.buscarStockProducto(p);
-    	
-    	// 2. Si el producto no está asignado a la máquina (s == null), no se puede calcular 
-    	// nada y se retorna null.
     	if (s == null) return null;
     	
-    	// 3. Se convierte la fecha de la última reposición a LocalDateTime (inicio del día) para
-    	// comparar con las ventas. Esto marca el punto de partida del 'ciclo de consumo' actual.
+    	// Punto de corte temporal: se ignoran ventas anteriores a la última carga de stock.
     	LocalDateTime desde = s.getFechaUltimaReposicion().atStartOfDay();
     	
-    	// 4. Se consulta al DAO todas las ventas registradas para este producto.
+    	// Se recupera el historial de ventas relevante para este ciclo de carga.
     	List<Venta> ventasRecientes = ventaDAO.buscarDesdeFecha(m.getId(), p.getId(), desde);
     	
-    	// 5. Se inicializa un acumulador para sumar el total de unidades vendidas en este periodo.
     	int totalUnidades = 0;
-    	
-    	// 6. Se recorre la lista de ventas recuperadas y se suman sus unidades al acumulador.
     	for (Venta v: ventasRecientes) totalUnidades += v.getUnidades();
     	
-    	// 7. Se calcula la diferencia de días entre la última vez que se rellenó y el día de hoy.
+    	// Cálculo del tiempo transcurrido (mínimo 1 día para evitar división por cero en cargas
+    	// recientes).
     	long diasTranscurridos = ChronoUnit.DAYS.between(s.getFechaUltimaReposicion(), LocalDate.now());
-    	
-    	// 8. Si la reposición fue hoy, el resultado sería 0. Se fuerza a 1 para evitar errores matemáticos
-    	// de división por cero.
     	if (diasTranscurridos == 0) diasTranscurridos = 1; 
     	
-    	// 9. Se calcula la Velocidad de Consumo: promedio de unidades vendidas por día. Se utiliza (double)
-    	// para no perder los decimales en la división.
+    	//Se determina el ritmo de salida del producto.
     	double velocidadConsumo = (double) totalUnidades / diasTranscurridos;
     	
-    	// 10. Si no ha habido ninguna venta (velocidad 0), se lanza una excepción porque no hay datos para
-    	// predecir.
+    	//Si el producto no tiene rotación (velocidad 0), no se puede realizar una proyección matemática.
     	if (velocidadConsumo == 0) throw new ArithmeticException("No hay datos de consumo para este producto.");
     	
-    	// 11. Se calcula cuántos días tardará en agotarse el stock actual dividiendo lo que queda por la velocidad
-    	// de consumo. El cast a (int) trunca los decimales, dando días completos.
+    	// Estimación de días de vida restantes para el stock actual.
     	int diasParaAgotar = (int)(s.getCantidadActual() / velocidadConsumo);
     	
-    	// 12. Se calcula la fecha final: se suman los días de vida que le quedan al stock a la fecha de hoy.
-    	// Se resta 1 día (minusDays(1)) como margen de seguridad para que el operario llegue antes del agotamiento total.
-    	// Se retorna el día de hoy + días para agotar - 1 día de margen.
+    	// Retorno: fecha actual + vida estimada - 1 día (margen de prevención de rotura de stock).
     	return LocalDate.now().plusDays(diasParaAgotar).minusDays(1);
-    }
-    
-    /*
-    //HU3: Venta
-    public Venta registrarVenta(MaquinaExpendedora m, Producto p, int cant) 
-            throws InsufficientStockException, EntityNotFoundException {
-    	//Buscamos el registro de stock del producto en esa máquina específica.
-        Stock stock = m.buscarStockProducto(p);
-        
-        // 2. Si el producto no existe en la máquina, lanzamos excepción.
-        if (stock == null) {
-            throw new EntityNotFoundException("El producto " + p.getId() + " no existe en la máquina " + m.getId());
-        }
-        
-        // 3. Intentamos reducir el stock. El método 'decrementar' validará si hay suficiente.
-        // Si la cantidad solicitada supera el stock, 'decrementar' lanzará InsufficientStockException.
-        stock.decrementar(cant);
-        
-        // 4. Creamos el objeto Venta usando tu nuevo constructor basado en IDs.
-        // Usamos LocalDateTime.now() para registrar el momento exacto.
-        Venta nuevaVenta = new Venta(m.getId(), p.getId(), cant, LocalDateTime.now());
-        
-        // 5. Persistimos la venta en el historial a través del DAO.
-        this.ventaDAO.registrar(nuevaVenta);
-    }*/
-    
-    // HU4: Estimación de fechas.
-    
-    // HU5:  
-
+    } 
 }
