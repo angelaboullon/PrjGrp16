@@ -4,15 +4,16 @@ import Entidades.Localizacion;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LocalizacionDAO {
+public class LocalizacionDAO 
+{
     private List<Localizacion> listaUbics = new ArrayList<>();
 
-    public void insertar(Localizacion l) {
-        listaUbics.add(l);
-    }
+    public void insertar(Localizacion l) { listaUbics.add(l); }
 
-    public Localizacion buscarPorCoordenadas(double lat, double lon) {
-        for (Localizacion l : listaUbics) {
+    public Localizacion buscarPorCoordenadas(double lat, double lon) 
+    {
+        for (Localizacion l : listaUbics) 
+        {
             if (Double.compare(l.getLatitud(), lat) == 0 && 
                 Double.compare(l.getLongitud(), lon) == 0) {
                 return l;
@@ -20,4 +21,6 @@ public class LocalizacionDAO {
         }
         return null;
     }
+    
+    //public List<Localizacion> listarTodas() { return new ArrayList<>(listaUbics); }
 }

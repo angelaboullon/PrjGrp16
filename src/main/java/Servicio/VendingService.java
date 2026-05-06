@@ -3,19 +3,29 @@ package Servicio;
 import Entidades.*;
 import DAO.*;
 import Excepciones.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-public class VendingService {
+public class VendingService 
+{
     private MaquinaDAO maquinaDAO;
     private LocalizacionDAO localizacionDAO;
+    private ProductoDAO productoDAO;
+    private VentaDAO ventaDAO;
 
     // Constructor: Solo necesitamos los DAOs de máquinas y localizaciones para HU1
-    public VendingService(MaquinaDAO mDao, LocalizacionDAO lDao) {
+    public VendingService(MaquinaDAO mDao, LocalizacionDAO lDao, ProductoDAO pDao, VentaDAO vDao) 
+    {
         this.maquinaDAO = mDao;
         this.localizacionDAO = lDao;
+        this.productoDAO = pDao;
+        this.ventaDAO = vDao;
     }
 
-    // HU1: Registro de una ubicación en el sistema
+    // HU1 - Cargar máquinas en el sistema: valida que las coordenadas no existan previamente.
     public void registrarLocalizacion(Localizacion l) throws DuplicateLocationException {
         if (localizacionDAO.buscarPorCoordenadas(l.getLatitud(), l.getLongitud()) != null) {
             throw new DuplicateLocationException("Ya existe una localización en estas coordenadas.");
@@ -23,7 +33,8 @@ public class VendingService {
         localizacionDAO.insertar(l);
     }
 
-    // HU1: Alta de una máquina asociada a una localización
+    // HU1 - Cargar máquinas en el sistema: orquestador principal que valida duplicados y vincula la
+    // máquina a una ubicación.
     public void darAltaMaquina(MaquinaExpendedora m, Localizacion l) throws Exception {
         // 1. Intentar registrar localización (si no existe ya)
         try {
@@ -178,4 +189,5 @@ public class VendingService {
     // HU4: Estimación de fechas.
     
     // HU5:  
+
 }
