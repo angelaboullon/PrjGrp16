@@ -190,14 +190,12 @@ public class VendingService
      * 
      * 
      **/
-    public List<Stock> consultarStock(String maquinaId) throws EntityNotFoundException 
-    {
-        MaquinaExpendedora maquina = maquinaDAO.buscarPorId(maquinaId);
-        if (maquina == null) 
-        {
-            throw new EntityNotFoundException("La máquina con el id especificado no existe.");
+    public List<Stock> consultarStock(String id) throws EntityNotFoundException {
+        MaquinaExpendedora m = maquinaDAO.buscarPorId(id);
+        if (m == null) {
+            throw new EntityNotFoundException("La máquina no ha sido encontrada.");
         }
-        return maquina.getListaStock();
+        return m.getListaStock();
     }
 
     
