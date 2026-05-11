@@ -24,7 +24,10 @@ public class Stock
     public void setProducto(Producto p) { this.producto = p; }
     
     public int getCantidadActual() { return cantidadActual; }
-    public void setCantidadActual(int c) { this.cantidadActual = c; }
+    public void setCantidadActual(int c) {
+        if (c < 0) throw new IllegalArgumentException("El stock no puede ser negativo."); 
+        this.cantidadActual = c;
+    }
     
     public int getCapacidadMax() { return capacidadMax; }
     public void setCapacidadMax(int cm) { this.capacidadMax = cm; }
@@ -32,6 +35,7 @@ public class Stock
     public LocalDate getFechaUltimaReposicion() { return fechaUltimaReposicion; }
     public void setFechaUltimaReposicion(LocalDate f) { this.fechaUltimaReposicion = f; }
 
+    
     
     
     // ==========
