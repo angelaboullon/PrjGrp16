@@ -24,7 +24,10 @@ public class Stock
     public void setProducto(Producto p) { this.producto = p; }
     
     public int getCantidadActual() { return cantidadActual; }
-    public void setCantidadActual(int c) { this.cantidadActual = c; }
+    public void setCantidadActual(int c) {
+        if (c < 0) throw new IllegalArgumentException("El stock no puede ser negativo."); 
+        this.cantidadActual = c;
+    }
     
     public int getCapacidadMax() { return capacidadMax; }
     public void setCapacidadMax(int cm) { this.capacidadMax = cm; }
@@ -34,22 +37,24 @@ public class Stock
 
     
     
+    
     // ==========
     // MÉTODOS
     // ==========
     
     /** incrementar(): incrementa las existencias del producto (proceso de reposición). **/
-    public void incrementar(int n) throws FullCapacityException 
-    {
-        // Validación de desbordamiento de capacidad.
-    	if (this.cantidadActual + n > this.capacidadMax)
+   
+    public void incrementar(int n) throws FullCapacityException {
+        // Si la suma supera el máximo, lanzamos la excepción que espera el test CP-31
+        if (this.cantidadActual + n > this.capacidadMax) {
             throw new FullCapacityException("No cabe tanta cantidad en este muelle.");
-        
-    	this.cantidadActual += n;
-    	
-    	// Registro de la estampa de tiempo.
+        }
+        this.cantidadActual += n;
         this.fechaUltimaReposicion = LocalDate.now();
     }
+    
+    
+    
     
     /** decrementar(): reduce las unidades disponibles tras una compra exitosa. **/
     public void decrementar(int cantidad) throws InsufficientStockException 

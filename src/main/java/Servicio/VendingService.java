@@ -143,29 +143,31 @@ public class VendingService
      **/
     public void asignarProductoMaquina(MaquinaExpendedora m, Producto p, int cupoMax) throws Exception 
     {
-        // Verificación de integridad: ambos elementos deben existir previamente en el sistema.
+        // 1. Validaciones de existencia (DAOs)
         if (maquinaDAO.buscarPorId(m.getId()) == null || productoDAO.buscarPorId(p.getId()) == null) 
-        {
-            throw new EntityNotFoundException("La máquina o el producto no existen.");
-        }
+            throw new EntityNotFoundException("Máquina o producto no existen.");
 
-        // Se evita duplicar el mismo producto en distintos muelles de la misma máquina.
+        // 2. Condición : Producto duplicado en la misma máquina
         if (m.buscarStockProducto(p) != null) 
-        {
-            throw new ProductAlreadyAssignedException("El producto ya está en esta máquina.");
-        }
-       
-        // Regla de volumen: se controla que no se reserve más espacio del que la máquina permite físicamente.
-        if (m.calcularEspacioOcupado() + cupoMax > m.getCapacidad()) 
-        {
-            throw new CapacityExceededException("No hay espacio suficiente en la máquina para ese cupo.");
-        }
+            throw new ProductAlreadyAssignedException("El producto ya está asignado a esta máquina.");
 
-        // Creación del objeto Stock (vínculo Producto <-> Máquina con sus propios atributos de cantidad).
+        // 3. Regla de capacidad física de la máquina
+        if (m.calcularEspacioOcupado() + cupoMax > m.getCapacidad()) 
+            throw new CapacityExceededException("No hay espacio suficiente.");
+
+        // 4. Validación de "Velocidad/Integridad"
+        // Validamos que el cupo sea positivo. Si cupoMax es 0 o negativo, 
+        // la lógica de reposición y velocidad fallaría.
+        if (cupoMax <= 0) 
+            throw new IllegalArgumentException("La capacidad del muelle debe ser mayor que cero.");
+
+        // 5. Creación del Stock
         Stock nuevoStock = new Stock();
         nuevoStock.setProducto(p);
         nuevoStock.setCapacidadMax(cupoMax);
-        nuevoStock.setCantidadActual(0);	// El muelle nace configurado pero vacío.
+        nuevoStock.setCantidadActual(0); 
+        nuevoStock.setFechaUltimaReposicion(LocalDate.now());
+        
         m.addStock(nuevoStock);
     }
 
@@ -176,16 +178,27 @@ public class VendingService
      * Este método se encarga del proceso de reposición de mercancía.
      * Actualiza las unidades y registra la fecha de la operación para el cálculo de velocidad.
      **/
-    public void reponerStock(MaquinaExpendedora m, Producto p, int cantidad) throws Exception 
-    {
-        Stock s = m.buscarStockProducto(p);
-        if (s == null) throw new EntityNotFoundException("El producto no está asignado a esta máquina.");
-        
-        // El método incrementar() de la entidad Stock gestiona la fechaUltimaReposicion automáticamente.
-        s.incrementar(cantidad); 
-    }
+   
 
     
+    public void reponerStock(MaquinaExpendedora m, Producto p, int cantidad) throws Exception {
+        Stock s = m.buscarStockProducto(p);
+        
+        // 1. Validación de existencia 
+        if (s == null) {
+            throw new EntityNotFoundException("El producto no está asignado a esta máquina.");
+        }
+        
+        // 2. VALIDACIÓN PARA CP-30: La cantidad debe ser positiva
+        // Sin esta línea, el test CP-30 falla porque el código no "protesta"
+        if (cantidad <= 0) {
+            throw new IllegalArgumentException("La cantidad a reponer debe ser un entero positivo");
+        }
+        
+        // 3. ACTUALIZACIÓN (Llama a la entidad Stock)
+        // Esto disparará la FullCapacityException en la entidad si se pasa del límite (CP-31)
+        s.incrementar(cantidad);
+    }
     // ========================================
     // HU3 - CONSULTAR STOCK DE UNA MÁQUINA
     // ========================================
