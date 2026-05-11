@@ -78,14 +78,19 @@ public class VendingService
 
     /**
      * darAltaMaquina()
-     * 
-     * Este método se encarga de llevar a cabo el proceso integral de alta de una máquina expendedora.
+     * * Este método se encarga de llevar a cabo el proceso integral de alta de una máquina expendedora.
      * 1. Asegura que la localización esté registrada en el sistema.
      * 2. Verifica que la localización física esté vacía; es decir, sin otra máquina instalada.
      * 3. Valida la unicidad del identificador (M-XXX) y del nombre comercial.
      **/
     public void darAltaMaquina(MaquinaExpendedora m, Localizacion l) throws Exception 
     {
+    	//Estas líneas if se añadieron tras ejecutar el test de integración,
+    	//pues este detectó que no había protección contra nulos y daba un error.
+        if (m == null || l == null) {
+            throw new IllegalArgumentException("La máquina y la localización no pueden ser nulas");
+        }
+
         try 
         {
         	// Se intenta el registro por si el parámetro l es una ubicación nueva.

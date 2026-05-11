@@ -157,4 +157,54 @@ class VendingServiceIntegracionHU1Test {
         // 4. CASO C: Coincidencia total (Asegura el TRUE && TRUE)
         assertNotNull(localizacionDAO.buscarPorCoordenadas(10.0, 10.0));
     }
+    
+    @Test
+    @Tag("Integracion")
+    @Tag("Robustez")
+    @DisplayName("INT-08: Protección contra máquina nula en alta")
+    void testAltaMaquinaNula() throws Exception {
+        // Arrange
+        Localizacion locValida = new Localizacion();
+        locValida.setLatitud(10.0);
+        locValida.setLongitud(10.0);
+        MaquinaExpendedora maquinaNula = null;
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            // Suponiendo que 'servicio' se inicializa en tu @BeforeEach
+            servicio.darAltaMaquina(maquinaNula, locValida);
+        }, "El servicio debe lanzar IllegalArgumentException al recibir un objeto nulo, evitando que el programa colapse con NullPointerException");
+    }
+    
+    @Test
+    @Tag("Integracion")
+    @Tag("Robustez")
+    @DisplayName("INT-09: Protección localización nula en alta")
+    void testAltaLocalizacionNula() throws Exception {
+        // Arrange
+        // Creamos una máquina válida para que el 'if' del servicio pase la primera condición
+        MaquinaExpendedora maquinaValida = new MaquinaExpendedora();
+        maquinaValida.setID("M-999");
+        Localizacion locNula = null;
+
+        // Act & Assert
+        // Java se ve obligado a evaluar (l == null) porque la máquina sí existe
+        assertThrows(IllegalArgumentException.class, () -> {
+            servicio.darAltaMaquina(maquinaValida, locNula);
+        }, "El servicio debe lanzar IllegalArgumentException al recibir una localización nula");
+    }
+    
+    @Test
+    @DisplayName("INT-10: Cobertura técnica de seguridad en Entidad (setLocalizacion)")
+    void testCoberturaTecnicaEntidad() {
+        // Para llegar al 100% en la entidad MaquinaExpendedora, 
+        // necesitamos saltarnos el "escudo" del servicio y llamar directamente al setter.
+        MaquinaExpendedora m = new MaquinaExpendedora();
+        
+        // Esto obligará a entrar en la rama del 'if (l == null)' de la entidad
+        assertThrows(IllegalArgumentException.class, () -> {
+            m.setLocalizacion(null);
+        }, "Verificando la protección interna de la entidad MaquinaExpendedora");
+    }
+    
 }

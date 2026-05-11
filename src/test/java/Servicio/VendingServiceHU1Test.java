@@ -55,7 +55,7 @@ class VendingServiceHU1Test {
     class PruebasHU1 {
 
         @Test
-        @DisplayName("CP-11: Alta limpia sin colisiones")
+        @DisplayName("CP-13: Alta limpia sin colisiones")
         void testDarAltaMaquina_Exito() throws Exception { 
             MaquinaExpendedora m1 = new MaquinaExpendedora();
             m1.setID("M-001");
@@ -74,7 +74,7 @@ class VendingServiceHU1Test {
         }
 
         @Test
-        @DisplayName("CP-12: Fallo por intento de ID duplicado")
+        @DisplayName("CP-14: Fallo por intento de ID duplicado")
         void testDarAltaMaquina_IDDuplicado() throws Exception { 
             MaquinaExpendedora m2 = new MaquinaExpendedora();
             m2.setID("M-001"); 
@@ -92,7 +92,7 @@ class VendingServiceHU1Test {
         }
 
         @Test
-        @DisplayName("CP-13: Fallo por ubicación geográficamente ocupada")
+        @DisplayName("CP-15: Fallo por ubicación geográficamente ocupada")
         void testDarAltaMaquina_UbicacionOcupada() throws Exception { 
             // 1. Preparamos la máquina "fantasma" que ya está ocupando el terreno
             MaquinaExpendedora m1 = new MaquinaExpendedora();
@@ -126,7 +126,7 @@ class VendingServiceHU1Test {
         // ==========================================
 
         @Test
-        @DisplayName("CP-CB-01: Forzar paso por el catch (Localización ya registrada)")
+        @DisplayName("CP-16 (CB): Forzar paso por el catch (Localización ya registrada)")
         void testDarAltaMaquina_CatchLocalizacionExistente() throws Exception { 
             MaquinaExpendedora m1 = new MaquinaExpendedora();
             m1.setID("M-005");
@@ -149,7 +149,7 @@ class VendingServiceHU1Test {
         }
 
         @Test
-        @DisplayName("CP-CB-02: Forzar if falso en bucle (Máquinas en otras ubicaciones)")
+        @DisplayName("CP-17 (CB): Forzar if falso en bucle (Máquinas en otras ubicaciones)")
         void testDarAltaMaquina_BucleConOtrasMaquinas() throws Exception { 
             // 1. La máquina nueva que queremos guardar
             MaquinaExpendedora mNueva = new MaquinaExpendedora();
@@ -177,6 +177,47 @@ class VendingServiceHU1Test {
             // Ejecutamos. El bucle dará una vuelta, el 'if' dirá "no chocan" (False -> Verde) 
             // y la máquina nueva se guardará con éxito.
             assertDoesNotThrow(() -> servicio.darAltaMaquina(mNueva, lNueva));
+        }
+        
+        @Test
+        @Tag("Robustez")
+        @DisplayName("CP-18: Protección contra localización nula (Mocks)")
+        void testDarAltaMaquina_LocalizacionNula() throws Exception {
+            // Arrange
+            MaquinaExpendedora mValida = new MaquinaExpendedora();
+            mValida.setID("M-001");
+            Localizacion lNula = null;
+
+            // Act & Assert
+            // Al ser 'mValida' no nulo, forzamos a Java a evaluar la segunda parte del OR (l == null)
+            assertThrows(IllegalArgumentException.class, () -> {
+                servicio.darAltaMaquina(mValida, lNula);
+            }, "El servicio debe detectar que la localización es nula y lanzar IllegalArgumentException");
+            
+            // Verificación: Aseguramos que no se llamó a ningún DAO al fallar la validación inicial
+            verify(maquinaDAO, never()).insertar(any());
+            verify(localizacionDAO, never()).buscarPorCoordenadas(anyDouble(), anyDouble());
+        }
+        
+        @Test
+        @Tag("Robustez")
+        @DisplayName("CP-19: Protección máquina nula (Mocks)")
+        void testDarAltaMaquina_MaquinaNula() throws Exception {
+            // Arrange
+            // Preparamos una localización válida pero una máquina nula
+            Localizacion lValida = new Localizacion();
+            lValida.setLatitud(42.88); 
+            lValida.setLongitud(-8.54);
+            MaquinaExpendedora mNula = null;
+
+            // Act & Assert
+            assertThrows(IllegalArgumentException.class, () -> {
+                servicio.darAltaMaquina(mNula, lValida);
+            }, "El servicio debe detectar que la máquina es nula antes de operar");
+
+            // Verification (Caja Negra/Blanca con Mocks)
+            // Verificamos que NUNCA se llamó al método insertar del DAO
+            verify(maquinaDAO, never()).insertar(any());
         }
     }
 }
