@@ -245,19 +245,28 @@ public class VendingService
      * (umbral), permitiendo al gestor priorizar las rutas de reposición antes de que se produzca 
      * una rotura de stock.
      **/
-    public List<Stock> consultarProductosBajoStock(MaquinaExpendedora m, int umbral)
-    {
-    	List<Stock> critica = new ArrayList<>();
-    	
-    	// Se recorre la lista completa de existencias (muelles) de la máquina proporcionada.
-    	for (Stock s : m.getListaStock())
-    	{
-    		// Se invoca la lógica interna de la entidad Stock para evaluar si la cantidad actual es
-    		// inferior al umbral de alerta definido. 
-    		// Si el producto está 'bajo mínimos', se añade a la lista de resultados.
-    		if (s.isBajoMinimos(umbral)) critica.add(s);
-    	}
-    	return critica;
+    /** Filtro estático: Basado en cantidad física actual **/
+    public List<Stock> consultarProductosBajoStock(MaquinaExpendedora m, int umbral) {
+        if (m == null || umbral < 0) throw new IllegalArgumentException("Parámetros inválidos.");
+        
+        List<Stock> critica = new ArrayList<>();
+        for (Stock s : m.getListaStock()) {
+            if (s.isBajoMinimos(umbral)) critica.add(s);
+        }
+        return critica;
+    }
+
+    /** Filtro dinámico: Basado en velocidad de consumo (Días restantes) **/
+    public List<Stock> consultarProductosCriticosPorTiempo(MaquinaExpendedora m, int diasMargen) {
+        if (m == null || diasMargen < 0) throw new IllegalArgumentException("Parámetros inválidos.");
+
+        List<Stock> alertas = new ArrayList<>();
+        for (Stock s : m.getListaStock()) {
+            if (s.getDiasParaAgotar() <= diasMargen) {
+                alertas.add(s);
+            }
+        }
+        return alertas;
     }
 
 
@@ -277,35 +286,27 @@ public class VendingService
      * 3. Proyecta cuánto tiempo durará el stock actual basándose en esa velocidad.
      * 4. Propone la visita del operario un día antes (margen de seguridad).
      **/
-    public LocalDate estimarFechaReposicion (MaquinaExpendedora m, Producto p)
-    {
-    	Stock s = m.buscarStockProducto(p);
-    	if (s == null) return null;
-    	
-    	// Punto de corte temporal: se ignoran ventas anteriores a la última carga de stock.
-    	LocalDateTime desde = s.getFechaUltimaReposicion().atStartOfDay();
-    	
-    	// Se recupera el historial de ventas relevante para este ciclo de carga.
-    	List<Venta> ventasRecientes = ventaDAO.buscarDesdeFecha(m.getId(), p.getId(), desde);
-    	
-    	int totalUnidades = 0;
-    	for (Venta v: ventasRecientes) totalUnidades += v.getUnidades();
-    	
-    	// Cálculo del tiempo transcurrido (mínimo 1 día para evitar división por cero en cargas
-    	// recientes).
-    	long diasTranscurridos = ChronoUnit.DAYS.between(s.getFechaUltimaReposicion(), LocalDate.now());
-    	if (diasTranscurridos == 0) diasTranscurridos = 1; 
-    	
-    	//Se determina el ritmo de salida del producto.
-    	double velocidadConsumo = (double) totalUnidades / diasTranscurridos;
-    	
-    	//Si el producto no tiene rotación (velocidad 0), no se puede realizar una proyección matemática.
-    	if (velocidadConsumo == 0) throw new ArithmeticException("No hay datos de consumo para este producto.");
-    	
-    	// Estimación de días de vida restantes para el stock actual.
-    	int diasParaAgotar = (int)(s.getCantidadActual() / velocidadConsumo);
-    	
-    	// Retorno: fecha actual + vida estimada - 1 día (margen de prevención de rotura de stock).
-    	return LocalDate.now().plusDays(diasParaAgotar).minusDays(1);
-    } 
+    public LocalDate estimarFechaReposicion(MaquinaExpendedora m, Producto p) {
+        Stock s = m.buscarStockProducto(p);
+        if (s == null) return null;
+        
+        LocalDateTime desde = s.getFechaUltimaReposicion().atStartOfDay();
+        List<Venta> ventasRecientes = ventaDAO.buscarDesdeFecha(m.getId(), p.getId(), desde);
+        
+        int totalUnidades = 0;
+        for (Venta v : ventasRecientes) totalUnidades += v.getUnidades();
+        
+        long dias = ChronoUnit.DAYS.between(s.getFechaUltimaReposicion(), LocalDate.now());
+        if (dias == 0) dias = 1; 
+        
+        double velocidad = (double) totalUnidades / dias;
+        
+        // Actualizamos la velocidad en la entidad para que HU5 pueda usarla
+        s.setVelocidadConsumo(velocidad); 
+        
+        if (velocidad == 0) throw new ArithmeticException("Sin datos de rotación.");
+        
+        int diasVida = (int)(s.getCantidadActual() / velocidad);
+        return LocalDate.now().plusDays(diasVida).minusDays(1);
+    }
 }
