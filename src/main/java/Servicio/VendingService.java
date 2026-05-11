@@ -173,16 +173,27 @@ public class VendingService
      * Este método se encarga del proceso de reposición de mercancía.
      * Actualiza las unidades y registra la fecha de la operación para el cálculo de velocidad.
      **/
-    public void reponerStock(MaquinaExpendedora m, Producto p, int cantidad) throws Exception 
-    {
-        Stock s = m.buscarStockProducto(p);
-        if (s == null) throw new EntityNotFoundException("El producto no está asignado a esta máquina.");
-        
-        // El método incrementar() de la entidad Stock gestiona la fechaUltimaReposicion automáticamente.
-        s.incrementar(cantidad); 
-    }
+   
 
     
+    public void reponerStock(MaquinaExpendedora m, Producto p, int cantidad) throws Exception {
+        Stock s = m.buscarStockProducto(p);
+        
+        // 1. Validación de existencia 
+        if (s == null) {
+            throw new EntityNotFoundException("El producto no está asignado a esta máquina.");
+        }
+        
+        // 2. VALIDACIÓN PARA CP-30: La cantidad debe ser positiva
+        // Sin esta línea, el test CP-30 falla porque el código no "protesta"
+        if (cantidad <= 0) {
+            throw new IllegalArgumentException("La cantidad a reponer debe ser un entero positivo");
+        }
+        
+        // 3. ACTUALIZACIÓN (Llama a la entidad Stock)
+        // Esto disparará la FullCapacityException en la entidad si se pasa del límite (CP-31)
+        s.incrementar(cantidad);
+    }
     // ========================================
     // HU3 - CONSULTAR STOCK DE UNA MÁQUINA
     // ========================================

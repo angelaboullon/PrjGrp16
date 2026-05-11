@@ -33,13 +33,20 @@ class VendingServiceHU2Test {
 
     @Test
     @DisplayName("CP-16: Fallo cuando la máquina no existe en el sistema")
-    void testMaquinaInexistente() {
-        when(maquinaDAO.buscarPorId(anyString())).thenReturn(null);
+    void testMaquinaInexistente() throws Exception {
+      
+        String idFicticio = "M-999"; 
+        when(maquinaDAO.buscarPorId(idFicticio)).thenReturn(null);
+        
+        MaquinaExpendedora m = new MaquinaExpendedora();
+        m.setID(idFicticio); 
+   
         Producto p = new Producto();
 
+        // 2. Act & 3. Assert
         assertThrows(EntityNotFoundException.class, 
-            () -> servicio.asignarProductoMaquina(new MaquinaExpendedora(), p, 10),
-            "Debe fallar si la máquina no está registrada");
+            () -> servicio.asignarProductoMaquina(m, p, 10),
+            "Debe fallar si la máquina M-999 no está registrada");
     }
 
     @Test
@@ -177,28 +184,98 @@ class VendingServiceHU2Test {
             () -> servicio.asignarProductoMaquina(new MaquinaExpendedora(), new Producto(), 10));
     }
     
-    
-    
+    @Nested
+    @DisplayName("Pruebas de Reposición de Stock (HU2)")
+    class ReposicionStockTests {
+
+        @Test
+        @DisplayName("CP-28: Reposición exitosa de existencias")
+        void testReponerStockExito() throws Exception {
+            // Arrange
+            MaquinaExpendedora m = new MaquinaExpendedora();
+            Producto p = new Producto();
+            p.setId("P-001");
+            
+            Stock s = new Stock();
+            s.setProducto(p);
+            s.setCapacidadMax(50);
+            s.setCantidadActual(10);
+            m.addStock(s); // Producto ya asociado
+
+            // Act
+            servicio.reponerStock(m, p, 20);
+
+            // Assert
+            assertEquals(30, s.getCantidadActual(), "El stock debería haberse incrementado a 30");
+            assertNotNull(s.getFechaUltimaReposicion(), "La fecha de reposición debe haberse actualizado");
+        }
+
+        @Test
+        @DisplayName("CP-29: Fallo al reponer producto que no está en la máquina")
+        void testReponerProductoInexistente() throws Exception {
+            // Arrange
+            MaquinaExpendedora m = new MaquinaExpendedora(); // Máquina sin productos
+            Producto p = new Producto();
+            p.setId("P-999");
+
+            // Act & Assert
+            assertThrows(EntityNotFoundException.class, 
+                () -> servicio.reponerStock(m, p, 10),
+                "Debe fallar porque el producto no ha sido asociado previamente");
+        }
+        @Test
+        @DisplayName("CP-30: Fallo al reponer cantidad negativa (Límite inferior)")
+        void testReponerCantidadNegativa() throws Exception {
+            // Arrange
+            MaquinaExpendedora m = new MaquinaExpendedora();
+            Producto p = new Producto();
+            p.setId("P-001");
+            
+            Stock s = new Stock();
+            s.setProducto(p);
+            s.setCapacidadMax(50);
+            s.setCantidadActual(10);
+            m.addStock(s);
+
+            // Act & Assert
+            // Verificamos que el sistema bloquea cantidades negativas o cero si así se definió
+            assertThrows(IllegalArgumentException.class, 
+                () -> servicio.reponerStock(m, p, -5),
+                "La cantidad a reponer debe ser un entero positivo");
+        }
+        @Test
+        @DisplayName("CP-31: Fallo por exceso de capacidad en el muelle (AVL)")
+        void testReponerExcesoCapacidad() throws Exception{
+            MaquinaExpendedora m = new MaquinaExpendedora();
+            Producto p = new Producto();
+            p.setId("P-001"); 
+            
+            Stock s = new Stock();
+            s.setProducto(p);
+            s.setCapacidadMax(20);
+            s.setCantidadActual(15);
+            m.addStock(s);
+
+            assertThrows(FullCapacityException.class, 
+                () -> servicio.reponerStock(m, p, 6),
+                "Debe lanzar FullCapacityException al superar el máximo del muelle");
+        }
+    } 
+
     @Test
     @Tag("CajaBlanca")
     @DisplayName("CP-CB-01: Forzar segundo operando del OR (Limpia línea 42)")
     void testCajaBlancaProductoNoExiste() throws Exception {
-        // 1. 
         MaquinaExpendedora m = new MaquinaExpendedora();
-        m.setID("M-001"); // Ponle un ID específico 
+        m.setID("M-001"); 
         
         Producto pInexistente = new Producto();
         pInexistente.setId("P-999");
 
-        // Configuramos el Mock: La máquina SÍ existe, pero el producto NO
         when(maquinaDAO.buscarPorId("M-001")).thenReturn(m);
         when(productoDAO.buscarPorId("P-999")).thenReturn(null);
 
-        // 2. Act & 3. Assert
         assertThrows(EntityNotFoundException.class, 
-            () -> servicio.asignarProductoMaquina(m, pInexistente, 10),
-            "Debe fallar al evaluar la segunda parte del condicional");
+            () -> servicio.asignarProductoMaquina(m, pInexistente, 10));
     }
-    
-    
-}
+} // Cierra VendingServiceHU2Test}

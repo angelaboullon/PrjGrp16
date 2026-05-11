@@ -26,7 +26,7 @@ class ProductoTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"A-123", "P-12", "P-1234", ""})
+        @ValueSource(strings = {"ABC-1", "P-12", "P-1234", ""})
         @DisplayName("IDs inválidos")
         void testIdsInvalidos(String id) {
             assertThrows(InvalidIdentifierException.class, () -> p.setId(id)); 
