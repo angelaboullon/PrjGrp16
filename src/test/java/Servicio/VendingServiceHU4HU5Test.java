@@ -136,7 +136,7 @@ class VendingServiceHU4HU5Test {
             ventas.add(new Venta(null, "P-001", 20, LocalDateTime.now().minusDays(5)));
             when(ventaDAO.buscarDesdeFecha(any(), eq("P-001"), any())).thenReturn(ventas);
 
-            List<Stock> resultado = service.consultarProductosBajoStock(m, 2); // umbral bajo, stock 6 > 2
+            List<Stock> resultado = service.consultarProductosCriticosPorTiempo(m, 3);
 
             assertEquals(1, resultado.size(), "Producto que se agota pronto debe detectarse");
         }
@@ -149,7 +149,7 @@ class VendingServiceHU4HU5Test {
 
             when(ventaDAO.buscarDesdeFecha(any(), any(), any())).thenReturn(new ArrayList<>());
 
-            List<Stock> resultado = service.consultarProductosBajoStock(m, 5);
+            List<Stock> resultado = service.consultarProductosCriticosPorTiempo(m, 3);
 
             assertTrue(resultado.isEmpty(), "No debe marcar producto con stock holgado y sin ventas recientes");
         }

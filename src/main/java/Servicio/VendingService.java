@@ -17,13 +17,22 @@ public class VendingService
     private ProductoDAO productoDAO;
     private VentaDAO ventaDAO;
 
-    // Constructor: Solo necesitamos los DAOs de máquinas y localizaciones para HU1
+    // Constructor completo: inyecta todos los DAOs (usado en tests con Mockito y en producción).
     public VendingService(MaquinaDAO mDao, LocalizacionDAO lDao, ProductoDAO pDao, VentaDAO vDao) 
     {
         this.maquinaDAO = mDao;
         this.localizacionDAO = lDao;
         this.productoDAO = pDao;
         this.ventaDAO = vDao;
+    }
+
+    // Constructor sin argumentos: inicializa los DAOs en memoria (útil para tests de integración).
+    public VendingService() 
+    {
+        this.maquinaDAO = new MaquinaDAO();
+        this.localizacionDAO = new LocalizacionDAO();
+        this.productoDAO = new ProductoDAO();
+        this.ventaDAO = new VentaDAO();
     }
 
     // HU1 - Cargar máquinas en el sistema: valida que las coordenadas no existan previamente.
@@ -128,19 +137,31 @@ public class VendingService
         return nuevaVenta;
     }
 
-    // HU5 - Detectar productos a reponer: devuelve los Stock que están bajo el umbral mínimo
-    // o cuya velocidad de consumo indica agotamiento en 3 días o menos.
+    // HU5 - Detectar productos a reponer (Condición 1 y 3): devuelve los Stock cuya cantidad
+    // actual está por debajo del umbral mínimo estático.
     public List<Stock> consultarProductosBajoStock(MaquinaExpendedora m, int umbral) {
+        if (m == null) throw new IllegalArgumentException("La máquina no puede ser nula.");
+        if (umbral < 0) throw new IllegalArgumentException("El umbral no puede ser negativo.");
+
         List<Stock> resultado = new ArrayList<>();
         for (Stock s : m.getListaStock()) {
-            // Criterio 1: por debajo del umbral estático.
             if (s.isBajoMinimos(umbral)) {
                 resultado.add(s);
-                continue;
             }
-            // Criterio 2: velocidad de consumo indica agotamiento en ≤ 3 días.
+        }
+        return resultado;
+    }
+
+    // HU5 - Detectar productos a reponer (Condición 2): devuelve los Stock cuya velocidad de
+    // consumo indica que se agotarán en un número de días igual o inferior a diasUmbral.
+    public List<Stock> consultarProductosCriticosPorTiempo(MaquinaExpendedora m, int diasUmbral) {
+        if (m == null) throw new IllegalArgumentException("La máquina no puede ser nula.");
+        if (diasUmbral < 0) throw new IllegalArgumentException("El umbral de días no puede ser negativo.");
+
+        List<Stock> resultado = new ArrayList<>();
+        for (Stock s : m.getListaStock()) {
             double velocidad = calcularVelocidadConsumo(m, s.getProducto());
-            if (velocidad > 0 && s.getCantidadActual() / velocidad <= 3) {
+            if (velocidad > 0 && s.getCantidadActual() / velocidad <= diasUmbral) {
                 resultado.add(s);
             }
         }
