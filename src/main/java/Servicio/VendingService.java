@@ -229,6 +229,10 @@ public class VendingService
      **/
     public List<Stock> consultarProductosBajoStock(MaquinaExpendedora m, int umbral)
     {
+    	// Escudos de robustez: protección contra parámetros inválidos.
+    	if (m == null) throw new IllegalArgumentException("La máquina no puede ser nula.");
+    	if (umbral < 0) throw new IllegalArgumentException("El umbral no puede ser negativo.");
+    	
     	List<Stock> critica = new ArrayList<>();
     	
     	// Se recorre la lista completa de existencias (muelles) de la máquina proporcionada.
@@ -241,6 +245,29 @@ public class VendingService
     	}
     	return critica;
     }
+
+    /**
+     * consultarProductosCriticosPorTiempo()
+     * 
+     * Este método identifica productos cuyo stock se agotará antes de un margen de días dado.
+     * Utiliza la velocidad de consumo para proyectar los días restantes y filtra aquellos
+     * cuya vida útil estimada es inferior al margen de seguridad.
+     **/
+    public List<Stock> consultarProductosCriticosPorTiempo(MaquinaExpendedora m, int diasMargen)
+    {
+    	// Escudos de robustez.
+    	if (m == null) throw new IllegalArgumentException("La máquina no puede ser nula.");
+    	if (diasMargen < 0) throw new IllegalArgumentException("El margen de días no puede ser negativo.");
+    	
+    	List<Stock> criticos = new ArrayList<>();
+    	
+    	for (Stock s : m.getListaStock())
+    	{
+    		if (s.getDiasParaAgotar() < diasMargen) criticos.add(s);
+    	}
+    	return criticos;
+    }
+
 
 
     

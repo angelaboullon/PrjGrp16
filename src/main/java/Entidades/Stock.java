@@ -13,6 +13,7 @@ public class Stock
     private int cantidadActual;
     private int capacidadMax;
     private LocalDate fechaUltimaReposicion;
+    private double velocidadConsumo;
 
     
     
@@ -31,6 +32,9 @@ public class Stock
     
     public LocalDate getFechaUltimaReposicion() { return fechaUltimaReposicion; }
     public void setFechaUltimaReposicion(LocalDate f) { this.fechaUltimaReposicion = f; }
+    
+    public double getVelocidadConsumo() { return velocidadConsumo; }
+    public void setVelocidadConsumo(double v) { this.velocidadConsumo = v; }
 
     
     
@@ -75,4 +79,12 @@ public class Stock
 
     /** isBajoMinimos(): compara las existencias actuales con un límite de seguridad definido externamente. **/
     public boolean isBajoMinimos(int umbral) { return cantidadActual < umbral; }
+
+    /** getDiasParaAgotar(): proyecta los días restantes hasta el agotamiento basándose en la velocidad de consumo.
+     *  Retorna 999 como valor seguro si la velocidad es 0 (producto estancado) para evitar división por cero. **/
+    public int getDiasParaAgotar() 
+    {
+        if (velocidadConsumo == 0.0) return 999;
+        return (int)(cantidadActual / velocidadConsumo);
+    }
 }
