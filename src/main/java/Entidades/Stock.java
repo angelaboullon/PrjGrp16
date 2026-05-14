@@ -87,10 +87,12 @@ public class Stock
 
     /** isBajoMinimos(): compara las existencias actuales con un límite de seguridad definido externamente. **/
     public boolean isBajoMinimos(int umbral) { return cantidadActual < umbral; }
-    
-    /** Calcula cuántos días tardará en agotarse el stock al ritmo actual **/
-    public int getDiasParaAgotar() {
-        if (this.velocidadConsumo <= 0) return 999; // Evita división por cero
-        return (int) (this.cantidadActual / this.velocidadConsumo);
+
+    /** getDiasParaAgotar(): proyecta los días restantes hasta el agotamiento basándose en la velocidad de consumo.
+     *  Retorna 999 como valor seguro si la velocidad es 0 (producto estancado) para evitar división por cero. **/
+    public int getDiasParaAgotar() 
+    {
+        if (velocidadConsumo == 0.0) return 999;
+        return (int)(cantidadActual / velocidadConsumo);
     }
 }

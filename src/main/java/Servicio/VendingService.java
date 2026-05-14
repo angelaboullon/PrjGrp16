@@ -245,29 +245,47 @@ public class VendingService
      * (umbral), permitiendo al gestor priorizar las rutas de reposición antes de que se produzca 
      * una rotura de stock.
      **/
-    /** Filtro estático: Basado en cantidad física actual **/
-    public List<Stock> consultarProductosBajoStock(MaquinaExpendedora m, int umbral) {
-        if (m == null || umbral < 0) throw new IllegalArgumentException("Parámetros inválidos.");
-        
-        List<Stock> critica = new ArrayList<>();
-        for (Stock s : m.getListaStock()) {
-            if (s.isBajoMinimos(umbral)) critica.add(s);
-        }
-        return critica;
+    public List<Stock> consultarProductosBajoStock(MaquinaExpendedora m, int umbral)
+    {
+    	// Escudos de robustez: protección contra parámetros inválidos.
+    	if (m == null) throw new IllegalArgumentException("La máquina no puede ser nula.");
+    	if (umbral < 0) throw new IllegalArgumentException("El umbral no puede ser negativo.");
+    	
+    	List<Stock> critica = new ArrayList<>();
+    	
+    	// Se recorre la lista completa de existencias (muelles) de la máquina proporcionada.
+    	for (Stock s : m.getListaStock())
+    	{
+    		// Se invoca la lógica interna de la entidad Stock para evaluar si la cantidad actual es
+    		// inferior al umbral de alerta definido. 
+    		// Si el producto está 'bajo mínimos', se añade a la lista de resultados.
+    		if (s.isBajoMinimos(umbral)) critica.add(s);
+    	}
+    	return critica;
     }
 
-    /** Filtro dinámico: Basado en velocidad de consumo (Días restantes) **/
-    public List<Stock> consultarProductosCriticosPorTiempo(MaquinaExpendedora m, int diasMargen) {
-        if (m == null || diasMargen < 0) throw new IllegalArgumentException("Parámetros inválidos.");
-
-        List<Stock> alertas = new ArrayList<>();
-        for (Stock s : m.getListaStock()) {
-            if (s.getDiasParaAgotar() <= diasMargen) {
-                alertas.add(s);
-            }
-        }
-        return alertas;
+    /**
+     * consultarProductosCriticosPorTiempo()
+     * 
+     * Este método identifica productos cuyo stock se agotará antes de un margen de días dado.
+     * Utiliza la velocidad de consumo para proyectar los días restantes y filtra aquellos
+     * cuya vida útil estimada es inferior al margen de seguridad.
+     **/
+    public List<Stock> consultarProductosCriticosPorTiempo(MaquinaExpendedora m, int diasMargen)
+    {
+    	// Escudos de robustez.
+    	if (m == null) throw new IllegalArgumentException("La máquina no puede ser nula.");
+    	if (diasMargen < 0) throw new IllegalArgumentException("El margen de días no puede ser negativo.");
+    	
+    	List<Stock> criticos = new ArrayList<>();
+    	
+    	for (Stock s : m.getListaStock())
+    	{
+    		if (s.getDiasParaAgotar() < diasMargen) criticos.add(s);
+    	}
+    	return criticos;
     }
+
 
 
     
