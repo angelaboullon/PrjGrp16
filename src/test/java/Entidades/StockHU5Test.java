@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 @DisplayName("Pruebas de Unidad: Entidad Stock (HU5)")
 class StockHU5Test {
@@ -19,22 +21,17 @@ class StockHU5Test {
     // CP-48 a CP-50: LÍMITES DE UMBRAL (ESTÁTICO)
     // ==========================================
 
-    @Test
+    @ParameterizedTest(name = "cantidad={0}, umbral={1} → esperado={2}")
     @DisplayName("CP-48, 49, 50: Validación de isBajoMinimos (AVL)")
-    void testIsBajoMinimos() {
-        int umbral = 5;
-
-        // CP-48: Cantidad menor (Alerta)
-        stock.setCantidadActual(4);
-        assertTrue(stock.isBajoMinimos(umbral), "CP-48: Con 4 unidades y umbral 5, debe retornar true.");
-
-        // CP-49: Cantidad igual (Frontera exacta)
-        stock.setCantidadActual(5);
-        assertFalse(stock.isBajoMinimos(umbral), "CP-49: Con 5 unidades y umbral 5, debe retornar false.");
-
-        // CP-50: Cantidad mayor (Seguro)
-        stock.setCantidadActual(10);
-        assertFalse(stock.isBajoMinimos(umbral), "CP-50: Con 10 unidades y umbral 5, debe retornar false.");
+    @CsvSource({
+        "4,  5, true",    // CP-48: Límite inferior — bajo mínimos (Alerta)
+        "5,  5, false",   // CP-49: Frontera exacta — igual al umbral (No alerta)
+        "10, 5, false"    // CP-50: Límite superior — por encima del umbral (Seguro)
+    })
+    void testIsBajoMinimos(int cantidad, int umbral, boolean esperado) {
+        stock.setCantidadActual(cantidad);
+        assertEquals(esperado, stock.isBajoMinimos(umbral),
+            "Con cantidad=" + cantidad + " y umbral=" + umbral + " isBajoMinimos debe ser " + esperado);
     }
 
     // ==========================================
@@ -46,7 +43,7 @@ class StockHU5Test {
     void testGetDiasParaAgotar_Normal() {
         // Arrange
         stock.setCantidadActual(10);
-        stock.setVelocidadConsumo(5.0); 
+        stock.setVelocidadConsumo(5.0);
 
         // Act & Assert (10 / 5 = 2)
         assertEquals(2, stock.getDiasParaAgotar(), "CP-51: Debe calcular exactamente 2 días restantes.");
