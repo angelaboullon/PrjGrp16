@@ -335,4 +335,6 @@ public class VendingService
         int diasVida = (int)(s.getCantidadActual() / velocidad);
         return LocalDate.now().plusDays(diasVida).minusDays(1);
     }
+    
+    
 }
