@@ -316,6 +316,14 @@ public class VendingService
      * 4. Propone la visita del operario un día antes (margen de seguridad).
      **/
     public LocalDate estimarFechaReposicion(MaquinaExpendedora m, Producto p) {
+    	
+    	//**************************************************
+    	//Añadido tras detectar error al hacer PruebasHU6
+        if (m == null || p == null) {
+            throw new IllegalArgumentException("La máquina y el producto no pueden ser nulos.");
+        }
+        //**************************************************
+        
         Stock s = m.buscarStockProducto(p);
         if (s == null) return null;
         
