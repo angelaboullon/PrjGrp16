@@ -210,8 +210,8 @@ public class VendingService
     public List<Stock> consultarStock(String id) throws EntityNotFoundException, InvalidIdentifierException 
     {
     	// CONTROL DE ROBUSTEZ -> COMENTAR AQUÍ.
-        //if (id == null || id.trim().isEmpty() || !id.matches("M-\\d{3}")) 
-            //throw new InvalidIdentifierException("El identificador no cumple con el formato requerido M-XXX.");
+        if (id == null || id.trim().isEmpty() || !id.matches("M-\\d{3}")) 
+            throw new InvalidIdentifierException("El identificador no cumple con el formato requerido M-XXX.");
         
     	MaquinaExpendedora m = maquinaDAO.buscarPorId(id);
         if (m == null) {

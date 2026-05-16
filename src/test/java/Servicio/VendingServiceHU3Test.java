@@ -54,6 +54,7 @@ public class VendingServiceHU3Test
 	 * assertIterableEquals para certificar que la lista devuelve mantiene un orden y contenido 'deeply equal'.
 	 **/
 	@Test
+	@Tag("CajaNegra")
 	@DisplayName("ID válido existente con varios productos en stock")
 	void consultarStock_IdValidoConVariosProductos() throws Exception
 	{
@@ -91,6 +92,7 @@ public class VendingServiceHU3Test
 	 * - Estrategia de verificación: assertThrows captura la excepción de negocio EntityNotFoundException.
 	 **/
 	@Test
+	@Tag("CajaNegra")
 	@DisplayName("ID con formato correcto pero no registrado en el sistema")
 	void consultarStock_IdInexistente()
 	{
@@ -114,6 +116,7 @@ public class VendingServiceHU3Test
 	 * - Estrategia de verificación: assertThrows intercepta la excepción customizada de reobustez InvalidIdentifierException.
 	 **/
 	@Test
+	@Tag("CajaNegra")
 	@DisplayName("ID con formato incorrecto (violación de patrón alfanumérico")
 	void consultarStock_IdFormatoIncorrecto()
 	{
@@ -134,6 +137,7 @@ public class VendingServiceHU3Test
 	 * consultaron las capas inferiores del backend de persistencia.
 	 **/
 	@Test
+	@Tag("CajaNegra")
 	@DisplayName("Identificador con valor nulo")
 	void consultarStock_IdNulo()
 	{
@@ -161,6 +165,7 @@ public class VendingServiceHU3Test
 	 * assertTrue para constatar la ausencia controlada de elementos sin recurror a retornos nulos.
 	 **/
 	@Test
+	@Tag("CajaNegra")
 	@DisplayName("ID válido existente pero con la lista de stock vacía")
 	void consultarStock_IdValidoMaquinaVacia()
 	{
@@ -193,6 +198,7 @@ public class VendingServiceHU3Test
 	 * - Estrategia de verificación: assertEquals comprueba las dimensiones de la lista y que el único elemento sea accesible.
 	 **/
 	@Test
+	@Tag("CajaNegra")
 	@DisplayName("ID válido existente con el mínimo de productos (1)")
 	void consultarStock_IdValidoMuelleMinimo() throws Exception
 	{
@@ -215,5 +221,28 @@ public class VendingServiceHU3Test
 				() -> assertEquals(1, resultadoReal.size(), "La lista debe contener exactamente 1 objeto Stock"),
 				() -> assertSame(listaStockMinima.get(0), resultadoReal.get(0), "El elemento recuperado debe ser idéntico al simulado")
 		);
+	}
+	
+	
+	/**
+	 * consultarStock_IdVacio(): comportamiento cuando el identificador de la máquina es una cadena de espacios.
+	 * - Técnica aplicada: Caja Blanca (Técnica de McCabe / Cobertura de decisión).
+	 * - Estrategia de verificación: análisis de caminos lógicos mediante inyección de parámetro inválido (cadena compuesta por espacios
+	 * en blanco). Se verifica mediante assertThrows que el flujo se interrumpe de forma controlada lanzando la excepción 
+	 * InvalidIdentifierException al evaluarse como verdadera la segunda condición del filtro de robustez, garantizando además la ausencia
+	 * de interacciones residuales con el componente MaquinaDAO.
+	 **/
+	@Test
+	@Tag("CajaBlanca")
+	@DisplayName("McCabe: identificador vacío")
+	void consultarStock_IdVacio()
+	{
+		// [Arrange] Se fuerza una cadena con espacios en blanco para activar el id.trim().isEmpty().
+		String idVacio = " ";
+		
+		// [Act & Assert] Caja Blanca: se evalúa la rama que faltaba del control de robustez.
+		assertThrows(InvalidIdentifierException.class, () -> {
+			vendingService.consultarStock(idVacio);
+		}, "El sistema debe detectar cadenas vacías y lanzar InvalidIdentifierException");
 	}
 }
