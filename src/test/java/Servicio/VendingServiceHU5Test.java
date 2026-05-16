@@ -13,6 +13,7 @@ import Entidades.Stock;
 @DisplayName("Pruebas de Integración y Robustez: HU5")
 class VendingServiceHU5Test {
     
+	//Para las pruebas de integración entre servicio y máquina
     private VendingService servicio;    
     private MaquinaExpendedora maquina;
 
