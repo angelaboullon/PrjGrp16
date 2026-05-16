@@ -103,7 +103,4 @@ class VendingServiceHU6Test {
         verify(ventaDAO, never()).buscarDesdeFecha(anyString(), anyString(), any(LocalDateTime.class));
     }
 
-    // -----------------------------------------------------------------
-    // (AQUÍ DEBAJO IRÁN LOS TEST DE CAJA BLANCA QUE HARÁS DESPUÉS)
-    // -----------------------------------------------------------------
 }
