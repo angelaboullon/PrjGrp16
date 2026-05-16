@@ -209,7 +209,7 @@ public class VendingService
      **/
     public List<Stock> consultarStock(String id) throws EntityNotFoundException, InvalidIdentifierException 
     {
-    	// CONTROL DE ROBUSTEZ -> COMENTAR AQUÍ.
+    	// Control de robustez.
         if (id == null || id.trim().isEmpty() || !id.matches("M-\\d{3}")) 
             throw new InvalidIdentifierException("El identificador no cumple con el formato requerido M-XXX.");
         
@@ -231,18 +231,25 @@ public class VendingService
      * Este método se encarga de ejecutar una venta, reduciendo el stock disponible y generando un 
      * registro histórico. 
      * Resulta una función fundamental para que el algoritmo de HU6 funcione.
+     * @throws EntityNotFoundException 
      **/
-    public void venderProducto(String idMaq, String idProd, int cantidad) throws Exception
-    {
-    	// Esqueleto temporal para que los tests de la HU4 compilen.
-    	// Mi compañero meterá AQUÍ la lógica real:
-    	// 1. Buscar la máquina con maquinaDAO.buscarPorId(idMaq). En caso de m == null, lanzar EntityNotFoundException.
-    	// 2. Buscar el producto con productoDAO.buscarPorId(idProd). En caso de p == null, lanzar EntityNotFoundException.
-    	// 3. Buscar el stock específico en esa máquina con m.buscarStockProducto(p). Si s == null, lanzar EntityNotFoundException.
-    	// 4. Decrementar stock con s.decrementar(cant).
-    	// 5. Registrar la venta:
-    	// 5.1. Venta nuevaVenta = new Venta(idMaq, idProd, cant, LocalDateTime.now());
-    	// 5.2. ventaDAO.registrar(nuevaVenta);
+    public void venderProducto(String idMaq, String idProd, int cantidad) throws Exception {
+        if (idMaq == null || idProd == null) 
+            throw new IllegalArgumentException("Los identificadores no pueden ser nulos");
+
+        MaquinaExpendedora m = maquinaDAO.buscarPorId(idMaq);
+        if (m == null) throw new EntityNotFoundException("Máquina no encontrada");
+        
+        Producto p = productoDAO.buscarPorId(idProd);
+        if (p == null) throw new EntityNotFoundException("Producto no encontrado");
+        
+        Stock s = m.buscarStockProducto(p);
+        if (s == null) throw new EntityNotFoundException("El producto no está en esta máquina");
+        
+        s.decrementar(cantidad);
+        
+        Venta nuevaVenta = new Venta(idMaq, idProd, cantidad, LocalDateTime.now());
+        ventaDAO.registrar(nuevaVenta);
     }
 
 

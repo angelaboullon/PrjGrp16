@@ -13,7 +13,6 @@ import org.junit.jupiter.api.*;
  * Análisis de Valores Límite (AVL) para asegurar que el componente resiste tanto flujos idílicos
  * de negocio como entradas malformadas (robustez).
  **/
-@Tag("CajaNegra")
 
 class StockTest 
 {
@@ -98,6 +97,7 @@ class StockTest
      **/
     @Test
     @Tag("HU4")
+    @Tag("CajaNegra")
     @DisplayName("Venta estándar (Clase Válida)")
     void decrementarVentaEstandar() throws InsufficientStockException
     {
@@ -122,6 +122,7 @@ class StockTest
      **/
     @Test
     @Tag("HU4")
+    @Tag("CajaNegra")
     @DisplayName("Agotamiento exacto (Límite)")
     void decrementarAgotamientoExacto() throws InsufficientStockException
     {
@@ -153,6 +154,7 @@ class StockTest
      **/
     @Test
     @Tag("HU4")
+    @Tag("CajaNegra")
     @DisplayName("Exceso de venta (Límite)")
     void decrementarExcesoDeVenta()
     {
@@ -182,6 +184,7 @@ class StockTest
      **/
     @Test
     @Tag("HU4")
+    @Tag("CajaNegra")
     @DisplayName("Venta nula (Frontera inferior)")
     void decrementarVentaNula()
     {
@@ -203,6 +206,7 @@ class StockTest
      **/
     @Test
     @Tag("HU4")
+    @Tag("CajaNegra")
     @DisplayName("Venta negativa (Clase Inválida)")
     void decrementarVentaNegativa()
     {

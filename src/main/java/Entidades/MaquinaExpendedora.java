@@ -17,7 +17,7 @@ public class MaquinaExpendedora
     private Localizacion localizacion;
     private List<Stock> listaStock = new ArrayList<>();
     private LocalDate fechaInstalacion;
-
+    
     public String getId() { return id; }
     public void setID(String id) throws InvalidIdentifierException 
     {
