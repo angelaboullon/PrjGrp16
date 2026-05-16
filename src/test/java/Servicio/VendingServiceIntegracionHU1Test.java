@@ -204,7 +204,7 @@ class VendingServiceIntegracionHU1Test {
         // Esto obligará a entrar en la rama del 'if (l == null)' de la entidad
         assertThrows(IllegalArgumentException.class, () -> {
             m.setLocalizacion(null);
-        }, "Verificando la protección interna de la entidad MaquinaExpendedora");
+        }, "Se está verificando la protección interna de la entidad MaquinaExpendedora");
     }
     
 }

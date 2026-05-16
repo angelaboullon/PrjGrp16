@@ -106,7 +106,7 @@ class VendingServiceHU5Test {
     }
 
     // ==========================================
-    // PRUEBAS DE ROBUSTEZ (ESCUDOS)
+    // PRUEBAS DE ROBUSTEZ 
     // ==========================================
 
     @Test
