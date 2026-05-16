@@ -54,7 +54,7 @@ public class VendingServiceHU4Test
 	@InjectMocks
 	private VendingService vendingService;
 	
-	
+
 	// =======
 	// TESTS
 	// =======

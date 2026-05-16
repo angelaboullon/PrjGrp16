@@ -178,9 +178,6 @@ public class VendingService
      * Este método se encarga del proceso de reposición de mercancía.
      * Actualiza las unidades y registra la fecha de la operación para el cálculo de velocidad.
      **/
-   
-
-    
     public void reponerStock(MaquinaExpendedora m, Producto p, int cantidad) throws Exception {
         Stock s = m.buscarStockProducto(p);
         
@@ -199,17 +196,24 @@ public class VendingService
         // Esto disparará la FullCapacityException en la entidad si se pasa del límite (CP-31)
         s.incrementar(cantidad);
     }
+    
+    
     // ========================================
     // HU3 - CONSULTAR STOCK DE UNA MÁQUINA
     // ========================================
-    
+   
     /**
      * consultarStock()
      * 
-     * 
+     * Este método se encarga de devolver el Stock de la máquina cuyo ID se introduce como parámetro. 
      **/
-    public List<Stock> consultarStock(String id) throws EntityNotFoundException {
-        MaquinaExpendedora m = maquinaDAO.buscarPorId(id);
+    public List<Stock> consultarStock(String id) throws EntityNotFoundException, InvalidIdentifierException 
+    {
+    	// CONTROL DE ROBUSTEZ -> COMENTAR AQUÍ.
+        //if (id == null || id.trim().isEmpty() || !id.matches("M-\\d{3}")) 
+            //throw new InvalidIdentifierException("El identificador no cumple con el formato requerido M-XXX.");
+        
+    	MaquinaExpendedora m = maquinaDAO.buscarPorId(id);
         if (m == null) {
             throw new EntityNotFoundException("La máquina no ha sido encontrada.");
         }
