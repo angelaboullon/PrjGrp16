@@ -67,6 +67,7 @@ public class VendingServiceHU4Test
 	 * comportamiento de Mockito (verify).
 	 **/
 	@Test
+	@Tag("CajaNegra")
 	@DisplayName("Flujo Total (Transacción exitosa)")
 	void venderProductoFlujoIdeal() throws Exception
 	{
@@ -119,6 +120,7 @@ public class VendingServiceHU4Test
 	 * - Estrategia de verificación: assertThrows captura EntityNotFoundException.
 	 **/
 	@Test
+	@Tag("CajaNegra")
 	@DisplayName("Error: producto no asignado")
 	void venderProducto_ProductoNoAsignado()
 	{
@@ -151,6 +153,7 @@ public class VendingServiceHU4Test
 	 * físicamente la respuesta de ausencia del simulador.
 	 **/
 	@Test
+	@Tag("CajaNegra")
 	@DisplayName("Error: máquina no existe")
 	void venderProductoMaquinaNoExiste()
 	{
@@ -183,6 +186,7 @@ public class VendingServiceHU4Test
 	 * - Estrategia de verificación: assertThrows captura la excepción de tipo IllegalArgumentException.
 	 **/
 	@Test
+	@Tag("CajaNegra")
 	@DisplayName("Control de robustez: máquina nula")
 	void venderProductoMaquinaNula()
 	{
@@ -202,6 +206,7 @@ public class VendingServiceHU4Test
 	 * - Estrategia de verificación: assertThrows intercepta el fallo controlado mediante una IllegalArgumentException limpia.
 	 **/
 	@Test
+	@Tag("CajaNegra")
 	@DisplayName("Control de robustez: producto nulo")
 	void venderProducto_ProductoNulo()
 	{
@@ -211,6 +216,38 @@ public class VendingServiceHU4Test
 		}, "El sistema dee abortar mediante IllegalArgumentException si el parámetro ID de producto es nulo");
 		
 		// Bloqueo preventivo de persistencia.
+		verifyNoInteractions(ventaDAO);
+	}
+	
+	
+	/**
+	 * venderProducto_ProductoInexistente():  verifica el cortocircuito del servicio cuando se le solicita operar con un producto inexistente.
+	 * - Técnica aplicada: Caja Blanca (técnica de McCabe / Cobertura de caminos mínimos).
+	 * - Estrategia de verificación: análisis estructural para cubrir la decisión huérfana detectada por Eclemma. Se pasa un ID de producto
+	 * válido en formato pero inexistente. Se simula el DAO para que devuelva null y se inercepta mediante assertThrows la excepción
+	 * EntityNotFoundException, verificando además el bloqueo preventivo de persistencia con verifyNoInteractions.
+	 **/
+	@Test
+	@Tag("CajaBlanca")
+	@DisplayName("McCabe: producto válido pero inexistente en el DAO")
+	void venderProducto_ProductoInexistente()
+	{
+		String idMaq = "M-001";
+		String idProdInexistente = "P-999";
+		
+		// [Arrange] Se simula que la máquina sí existe para superar el filtro m == null.
+		MaquinaExpendedora maquinaSimulada = mock(MaquinaExpendedora.class);
+		when(maquinaDAO.buscarPorId(idMaq)).thenReturn(maquinaSimulada);
+		
+		// Se fuerza al DAO del producto a devolver null ante el ID inexistente.
+		when(productoDAO.buscarPorId(idProdInexistente)).thenReturn(null);
+		
+		// [Act & Assert] Se verifica que salta la excepción correcta de negocio.
+		assertThrows(EntityNotFoundException.class, () -> {
+			vendingService.venderProducto(idMaq, idProdInexistente, 1);
+		}, "Debe lanzar EntityNotFoundException si el producto no existe en el catálogo");
+		
+		// Se verifica que la venta no se registra en la base de datos.
 		verifyNoInteractions(ventaDAO);
 	}
 }
