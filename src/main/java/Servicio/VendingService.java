@@ -228,7 +228,18 @@ public class VendingService
      * registro histórico. 
      * Resulta una función fundamental para que el algoritmo de HU6 funcione.
      **/
-    // INSERTAR EL MÉTODO AQUÍ
+    public void venderProducto(String idMaq, String idProd, int cantidad) throws Exception
+    {
+    	// Esqueleto temporal para que los tests de la HU4 compilen.
+    	// Mi compañero meterá AQUÍ la lógica real:
+    	// 1. Buscar la máquina con maquinaDAO.buscarPorId(idMaq). En caso de m == null, lanzar EntityNotFoundException.
+    	// 2. Buscar el producto con productoDAO.buscarPorId(idProd). En caso de p == null, lanzar EntityNotFoundException.
+    	// 3. Buscar el stock específico en esa máquina con m.buscarStockProducto(p). Si s == null, lanzar EntityNotFoundException.
+    	// 4. Decrementar stock con s.decrementar(cant).
+    	// 5. Registrar la venta:
+    	// 5.1. Venta nuevaVenta = new Venta(idMaq, idProd, cant, LocalDateTime.now());
+    	// 5.2. ventaDAO.registrar(nuevaVenta);
+    }
 
 
     
