@@ -178,9 +178,6 @@ public class VendingService
      * Este método se encarga del proceso de reposición de mercancía.
      * Actualiza las unidades y registra la fecha de la operación para el cálculo de velocidad.
      **/
-   
-
-    
     public void reponerStock(MaquinaExpendedora m, Producto p, int cantidad) throws Exception {
         Stock s = m.buscarStockProducto(p);
         
@@ -199,17 +196,24 @@ public class VendingService
         // Esto disparará la FullCapacityException en la entidad si se pasa del límite (CP-31)
         s.incrementar(cantidad);
     }
+    
+    
     // ========================================
     // HU3 - CONSULTAR STOCK DE UNA MÁQUINA
     // ========================================
-    
+   
     /**
      * consultarStock()
      * 
-     * 
+     * Este método se encarga de devolver el Stock de la máquina cuyo ID se introduce como parámetro. 
      **/
-    public List<Stock> consultarStock(String id) throws EntityNotFoundException {
-        MaquinaExpendedora m = maquinaDAO.buscarPorId(id);
+    public List<Stock> consultarStock(String id) throws EntityNotFoundException, InvalidIdentifierException 
+    {
+    	// Control de robustez.
+        if (id == null || id.trim().isEmpty() || !id.matches("M-\\d{3}")) 
+            throw new InvalidIdentifierException("El identificador no cumple con el formato requerido M-XXX.");
+        
+    	MaquinaExpendedora m = maquinaDAO.buscarPorId(id);
         if (m == null) {
             throw new EntityNotFoundException("La máquina no ha sido encontrada.");
         }
@@ -227,8 +231,26 @@ public class VendingService
      * Este método se encarga de ejecutar una venta, reduciendo el stock disponible y generando un 
      * registro histórico. 
      * Resulta una función fundamental para que el algoritmo de HU6 funcione.
+     * @throws EntityNotFoundException 
      **/
-    // INSERTAR EL MÉTODO AQUÍ
+    public void venderProducto(String idMaq, String idProd, int cantidad) throws Exception {
+        if (idMaq == null || idProd == null) 
+            throw new IllegalArgumentException("Los identificadores no pueden ser nulos");
+
+        MaquinaExpendedora m = maquinaDAO.buscarPorId(idMaq);
+        if (m == null) throw new EntityNotFoundException("Máquina no encontrada");
+        
+        Producto p = productoDAO.buscarPorId(idProd);
+        if (p == null) throw new EntityNotFoundException("Producto no encontrado");
+        
+        Stock s = m.buscarStockProducto(p);
+        if (s == null) throw new EntityNotFoundException("El producto no está en esta máquina");
+        
+        s.decrementar(cantidad);
+        
+        Venta nuevaVenta = new Venta(idMaq, idProd, cantidad, LocalDateTime.now());
+        ventaDAO.registrar(nuevaVenta);
+    }
 
 
     
@@ -305,6 +327,14 @@ public class VendingService
      * 4. Propone la visita del operario un día antes (margen de seguridad).
      **/
     public LocalDate estimarFechaReposicion(MaquinaExpendedora m, Producto p) {
+    	
+    	//**************************************************
+    	//Añadido tras detectar error al hacer PruebasHU6
+        if (m == null || p == null) {
+            throw new IllegalArgumentException("La máquina y el producto no pueden ser nulos.");
+        }
+        //**************************************************
+        
         Stock s = m.buscarStockProducto(p);
         if (s == null) return null;
         
@@ -327,4 +357,6 @@ public class VendingService
         int diasVida = (int)(s.getCantidadActual() / velocidad);
         return LocalDate.now().plusDays(diasVida).minusDays(1);
     }
+    
+    
 }
